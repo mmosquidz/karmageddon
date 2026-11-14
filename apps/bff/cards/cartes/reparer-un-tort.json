@@ -1,0 +1,29 @@
+{
+  "slug": "reparer-un-tort",
+  "type": "dilemme",
+  "titre": "Une vieille histoire vous revient : quelqu'un a payé pour une de vos fautes",
+  "condition": "age >= 30 && karma < 45",
+  "poids": "(45 - karma) / 15",
+  "options": [
+    {
+      "id": "reparer",
+      "libelle": "Vous allez le trouver pour réparer",
+      "issues": [
+        {
+          "texte": "Une lettre, un chèque, une poignée de main. Quelque chose se dénoue.",
+          "impact": "patrimoine -= 1500; karma += 8; moral += 2"
+        }
+      ]
+    },
+    {
+      "id": "oublier",
+      "libelle": "C'est de l'histoire ancienne",
+      "issues": [
+        {
+          "texte": "L'histoire ancienne a bonne mémoire.",
+          "impact": "moral -= 2"
+        }
+      ]
+    }
+  ]
+}

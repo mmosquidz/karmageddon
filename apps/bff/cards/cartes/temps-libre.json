@@ -1,0 +1,39 @@
+{
+  "slug": "temps-libre",
+  "type": "choix",
+  "titre": "La retraite vous laisse du temps libre",
+  "condition": "a('retraite')",
+  "poids": "1",
+  "options": [
+    {
+      "id": "jardin",
+      "libelle": "Vous vous mettez au jardinage",
+      "issues": [
+        {
+          "texte": "Vos tomates sont plus grosses que celles du voisin.",
+          "impact": "sante += 2; moral += 3"
+        }
+      ]
+    },
+    {
+      "id": "voyage",
+      "libelle": "Vous voyagez",
+      "issues": [
+        {
+          "texte": "Vous envoyez des cartes postales à des gens qui ont un téléphone.",
+          "impact": "patrimoine -= 2000; moral += 6; social += 2"
+        }
+      ]
+    },
+    {
+      "id": "lecture",
+      "libelle": "Vous aidez des enfants à lire, deux après-midi par semaine",
+      "issues": [
+        {
+          "texte": "Un élève finit son premier livre. Vous, votre troisième café.",
+          "impact": "karma += 4; social += 1; sante -= 1; moral -= 1"
+        }
+      ]
+    }
+  ]
+}

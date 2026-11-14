@@ -1,11 +1,13 @@
 # Karmageddon
 
-Première version jouable : un écran d’accueil, le bouton **Naître**, puis une fiche de naissance. Les tirages restent dans [Stochia](https://github.com/stochia). Ce dépôt ne fait que les demander et les présenter.
+Le jeu se joue de bout en bout, avec une présentation minimale. On commence sur l’écran d’accueil et le bouton **Naître**, qui affiche la fiche de naissance. **Vivre cette vie** lance la partie : une carte par année, avec un choix et son issue, jusqu’à 85 ans. Les tirages démographiques restent dans [Stochia](https://github.com/stochia). Ce dépôt les demande et les présente ; les cartes se tirent dans le filtre. Voir [Cartes](#cartes) et [Partie](#partie).
 
 ```text
 apps/game            SvelteKit, Vite, Tauri 2
-apps/bff             Filtre HTTP : une vie Stochia devient une fiche de naissance
-packages/contract    Forme partagée de cette fiche
+apps/bff             Filtre HTTP : une vie Stochia devient une fiche de naissance, puis une partie
+apps/bff/cards       Les cartes : types.json et un fichier par carte dans cartes/
+packages/contract    Forme partagée de la fiche et de la partie
+packages/engine      Moteur du jeu : état de vie, scripts des cartes, tirages
 ```
 
 Le navigateur n’appelle pas Stochia. Il appelle le filtre, qui retire la mort, la carrière, l’héritage, les cadets et les événements futurs.
@@ -60,16 +62,168 @@ npm run tauri dev -w @karmageddon/game
 
 Tauri relance Vite. Il ne faut donc pas laisser un `npm run dev` du jeu occuper le port 1420.
 
+## Cartes
+
+Une carte est un fichier JSON, versionné avec le code : `apps/bff/cards/cartes/<slug>.json`. Le nom du fichier est le slug de la carte. Les types sont dans `apps/bff/cards/types.json`. Il n’y a pas de base de données.
+
+Le filtre lit ces fichiers et les charge dans un magasin en mémoire (`MemoryCardStore`), où les cartes se listent, s’ajoutent et se remplacent. Modifier ce magasin n’écrit pas les fichiers. Le moteur (`packages/engine`) valide chaque carte, compile ses scripts, puis la tire et la résout. Tout cela ne tourne que dans le filtre : ni les fichiers, ni les scripts, ni les issues non tirées ne vont au jeu.
+
+```json
+{
+  "slug": "colis-par-erreur",
+  "type": "choix_mystere",
+  "titre": "Un colis vous est livré par erreur. Vous l'ouvrez ?",
+  "condition": "age >= 18",
+  "poids": "0.5",
+  "options": [
+    { "id": "ouvrir", "libelle": "Vous l'ouvrez", "issues": [
+      { "poids": "3", "texte": "Des chaussettes.", "impact": "moral += 1" },
+      { "poids": "1", "texte": "Une liasse de billets.", "impact": "patrimoine += 500; social -= 5" }
+    ] },
+    { "id": "rendre", "libelle": "Vous le rapportez", "issues": [
+      { "texte": "Le voisin vous remercie.", "impact": "social += 3" }
+    ] }
+  ]
+}
+```
+
+| Champ | Rôle | Défaut |
+| --- | --- | --- |
+| `slug` | Identifiant, égal au nom du fichier | |
+| `type` | Un type de `types.json` | |
+| `condition` | La carte peut-elle être tirée pour cette vie ? | `vrai` |
+| `poids` | Fréquence relative parmi les cartes tirables | `1` |
+| `unique` | Jouée une seule fois par vie | `false` |
+| `sensible` | Sujet dur : hors des tirages sauf demande explicite | `false` |
+| `actif` | `false` garde le fichier sans jamais tirer la carte | `true` |
+| `variables` | Tirages intermédiaires `{ "nom", "valeur" }`, faits dans l’ordre à la résolution | aucune |
+| `options` | Les choix du joueur. Une carte subie n’en a qu’un | |
+| `issues` | Les suites possibles d’une option : `condition`, `poids`, `texte`, `impact` | |
+
+Un type est une donnée : en ajouter un, c’est ajouter `{ "slug", "libelle" }` dans `types.json`. Une carte dont le type n’existe pas est écartée.
+
+Une carte invalide n’est jamais tirée ni réparée : elle est écartée avec le nom de son fichier, le champ et la raison. Cela vaut pour un fichier qui n’est pas du JSON, un slug différent du nom du fichier, un champ inconnu ou un script faux.
+
+### Langage de script
+
+`condition`, `poids`, `valeur` et `impact` sont écrits dans un petit langage propre au jeu. Ce n’est pas du JavaScript et rien n’est passé à `eval` : un nom ou une fonction hors des listes ci-dessous fait refuser la carte, avec le champ et la colonne de l’erreur.
+
+- Valeurs : nombres, textes entre `'` ou `"`, `vrai`, `faux`.
+- Opérateurs : `+ - * /`, `< <= > >=`, `== !=`, `&& || !`, `condition ? a : b`, parenthèses.
+- Fonctions : `a('bac')` (la vie porte cette marque), `deja('slug')` (carte déjà jouée), `min`, `max`, `arrondi`, et pour le hasard `hasard()` (de 0 à 1) et `entier(1, 6)` (bornes comprises).
+- Impact : des changements séparés par `;`. Affectations `=`, `+=`, `-=`, `*=`, `/=`, et les actions `pose('bac')` et `retire('bac')`.
+
+Le hasard n’est permis que dans `variables` et `impact`. Une condition ou un poids se calcule sur l’état seul ; une issue se choisit sur l’état et les variables déjà tirées.
+
+| Nom | Type | Un impact peut le changer |
+| --- | --- | --- |
+| `sexe` | `'femme'` ou `'homme'` | non |
+| `pays` | code du pays de naissance, `'FR'` | non |
+| `milieu` | `'urbain'` ou `'rural'` | non |
+| `qi` | nombre | non |
+| `rangParents` | rang de richesse des parents, 1 à 100 | non |
+| `rangParentsConnu` | booléen : Stochia donne-t-il ce rang ? | non |
+| `age` | nombre | non |
+| `sante`, `social`, `moral` | jauges de 0 à 100, départ à 50 | oui, bornées |
+| `karma` | jauge de 0 à 100, départ neutre à 50 | oui, bornée |
+| `patrimoine` | nombre, départ à 0, peut être négatif | oui |
+| `scolarise`, `emploi`, `couple` | booléens | oui |
+| `enfants`, `petitsEnfants` | entiers, 0 ou plus | oui |
+| `mineur`, `parent`, `grandParent` | booléens déduits de l’âge et des compteurs | non |
+
+Les marques (`bac`, `voiture`…) sont des libellés libres : une carte en pose une sans que le modèle change. Lire `rangParents` quand il est inconnu écarte la carte du tirage : écrire `rangParentsConnu && rangParents >= 80`.
+
+Ces paramètres sont dans `packages/engine/src/parameters.ts` et `state.ts`. Le patrimoine est en unité de jeu, sans lien avec la richesse de Stochia.
+
+### Tirage
+
+`drawCard` tire une carte parmi celles dont la condition est vraie, au prorata des poids. `resolveCard` tire les variables, choisit une issue, applique son impact et rend un nouvel état. Le générateur est fourni par l’appelant et initialisé par une graine : la même graine rejoue la même vie.
+
+### Jeu de base
+
+Le dépôt contient 11 types et 71 cartes qui suffisent à dérouler une vie, de 1 an à la retraite. Le moteur n’a pas de règle de vie : l’école, le travail, le couple ou les enfants n’arrivent que par des cartes, et l’enchaînement passe par les marques et les conditions.
+
+| Type | Rôle | Exemples |
+| --- | --- | --- |
+| `etape` (Étape de vie) | Les passages d’une vie, de poids élevé quand leur moment vient | premiers pas, rentrée, orientation, installation, naissance, retraite |
+| `epreuve` (Épreuve) | Un score tiré qui décide de l’issue | bac, diplôme, premier emploi, recherche d’emploi |
+| `rencontre` | Une personne entre dans la vie et pose une marque | ami d’enfance, premier amour, coup de foudre, mentor |
+| `opportunite` (Opportunité) | Ne s’ouvre qu’après une marque ou une situation | recommandation, promotion, retour au travail |
+| `pari` | Un risque choisi, issue tirée | créer son entreprise, placement en bourse, arrêter de fumer |
+| `retour_de_baton` (Retour de bâton) | La suite d’un choix passé, lu dans les marques | colis réclamé, panne de voiture, toux du fumeur |
+| `dilemme` | Deux options qui coûtent chacune quelque chose | première cigarette, triche, prêt à un ami, mutation |
+| `chance`, `tuile` | Subies, une seule option | loterie, prime, pension ; bras cassé, grippe, licenciement |
+| `choix`, `choix_mystere` (Choix mystère) | Choix du joueur, à issue connue ou cachée | vélo, vacances, club de sport ; colis, voisin bruyant |
+
+Le fil principal : `rentree-des-classes` met à l’école (marque `ecole`), `orientation` mène au lycée, à l’apprentissage ou à l’arrêt (`lycee`, `fin_etudes`), `bac` puis `apres-le-bac` et `diplome` mènent aux études supérieures, `premier-emploi` puis `recherche-emploi` au travail, `coup-de-foudre` au couple, `installation` et `naissance` à la famille, `retraite` à partir de 62 ans.
+
+### Karma
+
+Le karma est une jauge de l’état, affichée au joueur comme les autres. Il se gagne par des bonnes actions qui coûtent toujours autre chose : rapporter le portefeuille plutôt que garder les billets, avouer son erreur au lieu de laisser accuser un collègue (au prix d’une prime), donner son sang (santé), son argent (patrimoine) ou ses samedis (moral). Les mauvaises actions rapportent tout de suite et font baisser le karma.
+
+Le karma ne donne pas de points : il penche la chance, par les poids des cartes.
+- Au-dessus de 75, `karma-rend-la-monnaie` peut tomber, d’autant plus souvent que le karma est haut. La loterie et la recommandation du mentor deviennent un peu plus probables.
+- Au-dessous de 25, `karma-presente-la-note` coûte des amis, de l’argent ou du moral.
+- Sous 45, à partir de 30 ans, `reparer-un-tort` offre de racheter une faute contre de l’argent.
+
+`npm test` vérifie la règle : pour chaque carte dont les options changent le karma, l’option la plus vertueuse coûte plus en santé, social, moral ou patrimoine que la moins vertueuse.
+
+### Ajouter ou modifier une carte
+
+Créer ou modifier un fichier dans `apps/bff/cards/cartes/`, puis :
+
+```bash
+npm run cards:validate
+npm run cards:simulate
+```
+
+`cards:validate` compile toutes les cartes, inactives comprises, et liste chaque fichier à corriger. `npm test` fait la même vérification.
+
+`cards:simulate` déroule une vie avec le jeu du dépôt : une carte par an de 1 à 85 ans, une option prise au hasard, depuis la naissance de `apps/bff/fixtures/life.json`. Il affiche chaque année, l’état final et la commande pour rejouer la même graine : `npm run cards:simulate -- <graine>`, `--sensibles` pour inclure les cartes sensibles, `--saint` ou `--egoiste` pour prendre toujours l’option qui fait le plus ou le moins pour le karma. C’est un outil de réglage, pas une règle du jeu : 85 ans est une borne de l’outil, pas une mort, et il n’appelle pas Stochia.
+
+`npm test` simule aussi 300 vies au hasard, 100 de saints et 100 d’égoïstes. Il vérifie que chaque carte est tirée, que chaque issue écrite est atteinte, que les états restent valides, que les étapes arrivent à leur âge dans la plupart des vies, et que le karma suit la façon de jouer.
+
+## Partie
+
+La naissance crée aussi une partie dans le filtre. Elle part de la fiche filtrée et reçoit sa propre graine, qui ne sort pas du filtre. Le jeu la fait avancer en deux appels :
+
+| Route | Réponse |
+| --- | --- |
+| `POST /api/births` | `{ lifeId, birth }` : la fiche de naissance et l’identifiant de la partie |
+| `POST /api/lives/:id/next` | La carte de l’année suivante, ou la fin de la partie |
+| `POST /api/lives/:id/choice` avec `{ "choice": "<id>" }` | Le texte de l’issue tirée et l’état d’après |
+
+Les années sans carte tirable passent sans s’afficher. Redemander `next` avant d’avoir répondu renvoie la même carte, et un second `choice` sur la même carte est refusé : un double clic ou une réponse perdue ne fait pas jouer deux fois. Une carte qui échoue à la résolution est mise de côté et journalisée, puis la partie continue. Les cartes sensibles ne sont pas tirées.
+
+Le jeu reçoit seulement une liste fixe de champs :
+- l’âge, les jauges (karma compris), le patrimoine, la scolarité, l’emploi, le couple, les enfants et les petits-enfants ;
+- le titre et le type de la carte, avec l’identifiant et le libellé de chaque option ;
+- après un choix, le texte de l’issue tirée et rien d’autre.
+
+Rien ne sort sur les conditions, les poids, les impacts, les variables, les issues non tirées, les marques, l’historique ou la graine.
+
+La partie s’arrête à 85 ans. C’est une borne du jeu, pas une mort : la date de décès simulée reste dans Stochia, et le filtre ne la garde pas.
+
+Les parties vivent en mémoire, sans base de données ni sauvegarde. Le filtre oublie une partie après deux heures sans action, et garde au plus 5 000 parties : au-delà, la plus ancienne part. Un redémarrage les oublie toutes, et le jeu propose alors de renaître.
+
 ## Vérifier
 
 ```bash
 npm test
 npm run check
 npm run build
+npm run cards:validate
+npm run cards:simulate
 ```
 
 ## Limites
 
+- La présentation de la partie est minimale : un état, une carte, ses choix et son issue. Il n’y a pas d’éditeur de cartes, ni de récapitulatif de vie à la fin.
+- Les parties sont dans la mémoire d’un seul filtre : plusieurs instances hébergées derrière un répartiteur ne les partageraient pas.
+- Les conditions, poids et impacts du jeu de base sont des valeurs de départ, à régler avec `cards:simulate`. En l’état, le patrimoine finit souvent négatif et la santé basse vers 85 ans.
+- Une jauge à 0 n’a pas d’effet : la mort vient de Stochia, et rien ne la relie encore aux cartes.
+- Sans moteur nouveau, une carte ne peut pas en appeler une autre l’année suivante, ni agir plusieurs années après, ni répéter un effet chaque année : ces enchaînements passent seulement par les marques et les conditions.
+- Les cartes changent avec le code : en modifier une demande de redémarrer le filtre, et de le redéployer une fois qu’il sera hébergé.
 - Le filtre appelle Stochia depuis une seule adresse. Le service public limite `/api` à 60 requêtes par minute pour cette adresse, tous joueurs confondus.
 - Ni le jeu ni le filtre ne sont déployés.
 - Android, iOS et les installeurs signés ne sont pas faits. Une application Tauri de production a besoin d’un filtre hébergé et de `VITE_BFF_URL` au moment de la compilation.

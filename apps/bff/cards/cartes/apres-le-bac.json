@@ -1,0 +1,30 @@
+{
+  "slug": "apres-le-bac",
+  "type": "etape",
+  "titre": "Le bac en poche, il faut choisir la suite",
+  "condition": "scolarise && a('bac') && !a('etudes_sup')",
+  "poids": "60",
+  "unique": true,
+  "options": [
+    {
+      "id": "etudes",
+      "libelle": "Vous continuez vos études",
+      "issues": [
+        {
+          "texte": "Inscription faite. Le restaurant universitaire vous attend.",
+          "impact": "pose('etudes_sup'); patrimoine -= 500"
+        }
+      ]
+    },
+    {
+      "id": "travail",
+      "libelle": "Vous entrez dans la vie active",
+      "issues": [
+        {
+          "texte": "Vous rangez vos cahiers et vous cherchez du travail.",
+          "impact": "scolarise = faux; pose('fin_etudes')"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "slug": "karma-rend-la-monnaie",
+  "type": "chance",
+  "titre": "Le karma vous rend la monnaie",
+  "condition": "age >= 12 && karma >= 75",
+  "poids": "(karma - 70) / 20",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Accepter",
+      "issues": [
+        {
+          "texte": "Quelqu'un que vous aviez aidé il y a longtemps vous recommande. Le monde est petit.",
+          "impact": "social += 3; moral += 2"
+        },
+        {
+          "texte": "Un inconnu vous laisse sa place, son parapluie et son ticket gagnant.",
+          "impact": "patrimoine += 500; moral += 2"
+        },
+        {
+          "texte": "Tout le monde a l'air de vous vouloir du bien, aujourd'hui. C'est louche, mais agréable.",
+          "impact": "moral += 4"
+        }
+      ]
+    }
+  ]
+}

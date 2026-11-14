@@ -1,0 +1,28 @@
+{
+  "slug": "benevolat",
+  "type": "choix",
+  "titre": "Une association du quartier cherche des bénévoles",
+  "condition": "age >= 16",
+  "poids": "0.4",
+  "options": [
+    {
+      "id": "engager",
+      "libelle": "Vous donnez vos samedis",
+      "issues": [
+        {
+          "texte": "Vos samedis matin ont trouvé un sens. Vos grasses matinées, moins.",
+          "impact": "social += 2; moral -= 1; sante -= 1; karma += 5"
+        }
+      ]
+    },
+    {
+      "id": "pas_le_temps",
+      "libelle": "Pas le temps",
+      "issues": [
+        {
+          "texte": "Vous signez la pétition. C'est déjà ça."
+        }
+      ]
+    }
+  ]
+}

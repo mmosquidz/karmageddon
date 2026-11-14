@@ -1,0 +1,57 @@
+{
+  "slug": "pari-entre-amis",
+  "type": "pari",
+  "titre": "Vos amis parient sur le match de ce soir",
+  "condition": "age >= 16",
+  "poids": "0.5",
+  "variables": [
+    {
+      "nom": "de",
+      "valeur": "hasard()"
+    }
+  ],
+  "options": [
+    {
+      "id": "petite_mise",
+      "libelle": "Vous misez un peu",
+      "issues": [
+        {
+          "condition": "de < 0.5",
+          "texte": "Gagné. Vous offrez la tournée avec leur argent.",
+          "impact": "patrimoine += 50; social += 2"
+        },
+        {
+          "condition": "de >= 0.5",
+          "texte": "Perdu. Vous restez beau joueur.",
+          "impact": "patrimoine -= 50"
+        }
+      ]
+    },
+    {
+      "id": "grosse_mise",
+      "libelle": "Vous misez gros",
+      "issues": [
+        {
+          "condition": "de < 0.25",
+          "texte": "Gagné gros. On vous regarde autrement.",
+          "impact": "patrimoine += 1000; moral += 5"
+        },
+        {
+          "condition": "de >= 0.25",
+          "texte": "Perdu gros. On vous regarde autrement aussi.",
+          "impact": "patrimoine -= 300; moral -= 4"
+        }
+      ]
+    },
+    {
+      "id": "refuser",
+      "libelle": "Vous ne pariez pas",
+      "issues": [
+        {
+          "texte": "Vous gardez votre argent. Ils gardent leurs blagues.",
+          "impact": "social -= 1"
+        }
+      ]
+    }
+  ]
+}

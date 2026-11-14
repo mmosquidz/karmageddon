@@ -1,0 +1,19 @@
+{
+  "slug": "petit-enfant",
+  "type": "etape",
+  "titre": "Vous devenez grand-parent",
+  "condition": "parent && age >= 48 && petitsEnfants < enfants * 2",
+  "poids": "2",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Faire connaissance",
+      "issues": [
+        {
+          "texte": "Un petit-enfant est né.",
+          "impact": "petitsEnfants += 1; moral += 8"
+        }
+      ]
+    }
+  ]
+}

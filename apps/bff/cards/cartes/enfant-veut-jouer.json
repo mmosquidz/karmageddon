@@ -1,0 +1,28 @@
+{
+  "slug": "enfant-veut-jouer",
+  "type": "choix",
+  "titre": "Votre enfant insiste pour jouer. Vous y allez ou vous finissez votre travail ?",
+  "condition": "parent && emploi",
+  "options": [
+    {
+      "id": "jouer",
+      "libelle": "Vous allez jouer",
+      "issues": [
+        {
+          "texte": "Une heure de cabane en coussins. Le travail attendra demain.",
+          "impact": "moral += 5; social += 2"
+        }
+      ]
+    },
+    {
+      "id": "travailler",
+      "libelle": "Vous finissez votre travail",
+      "issues": [
+        {
+          "texte": "Le dossier est bouclé.",
+          "impact": "moral -= 3; patrimoine += 50"
+        }
+      ]
+    }
+  ]
+}

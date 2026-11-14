@@ -1,0 +1,30 @@
+{
+  "slug": "ami-d-enfance",
+  "type": "rencontre",
+  "titre": "Un enfant de votre classe vous regarde manger votre goûter",
+  "condition": "age >= 5 && age <= 12 && !a('ami_enfance')",
+  "poids": "4",
+  "unique": true,
+  "options": [
+    {
+      "id": "aller_vers",
+      "libelle": "Vous partagez",
+      "issues": [
+        {
+          "texte": "Vous échangez vos goûters. C'est pour la vie.",
+          "impact": "pose('ami_enfance'); social += 5"
+        }
+      ]
+    },
+    {
+      "id": "rester",
+      "libelle": "Vous gardez tout",
+      "issues": [
+        {
+          "texte": "Vous observez la cour de récréation, en expert.",
+          "impact": "social -= 1"
+        }
+      ]
+    }
+  ]
+}

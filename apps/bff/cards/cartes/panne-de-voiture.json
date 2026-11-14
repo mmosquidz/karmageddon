@@ -1,0 +1,19 @@
+{
+  "slug": "panne-de-voiture",
+  "type": "retour_de_baton",
+  "titre": "Votre voiture tombe en panne",
+  "condition": "a('voiture')",
+  "poids": "0.7",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Appeler le garagiste",
+      "issues": [
+        {
+          "texte": "Le garagiste prononce un chiffre, puis « environ ».",
+          "impact": "patrimoine -= entier(200, 1500); moral -= 3"
+        }
+      ]
+    }
+  ]
+}

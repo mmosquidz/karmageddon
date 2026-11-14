@@ -1,0 +1,30 @@
+{
+  "slug": "premiere-cigarette",
+  "type": "dilemme",
+  "titre": "Derrière le gymnase, on vous tend une cigarette",
+  "condition": "age >= 13 && age <= 20 && !a('fumeur')",
+  "poids": "1",
+  "unique": true,
+  "options": [
+    {
+      "id": "accepter",
+      "libelle": "Vous essayez",
+      "issues": [
+        {
+          "texte": "Vous toussez, puis vous recommencez.",
+          "impact": "pose('fumeur'); social += 2"
+        }
+      ]
+    },
+    {
+      "id": "refuser",
+      "libelle": "Vous refusez",
+      "issues": [
+        {
+          "texte": "Vous gardez vos poumons pour plus tard.",
+          "impact": "moral += 1"
+        }
+      ]
+    }
+  ]
+}

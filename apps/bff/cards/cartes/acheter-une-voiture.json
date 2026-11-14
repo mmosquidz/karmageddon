@@ -1,0 +1,33 @@
+{
+  "slug": "acheter-une-voiture",
+  "type": "choix",
+  "titre": "Acheter une voiture ?",
+  "condition": "age >= 18 && !a('voiture')",
+  "options": [
+    {
+      "id": "acheter",
+      "libelle": "Vous l'achetez",
+      "issues": [
+        {
+          "poids": "3",
+          "texte": "Elle démarre au premier tour de clé.",
+          "impact": "pose('voiture'); patrimoine -= 8000; social += 3"
+        },
+        {
+          "poids": "1",
+          "texte": "Une occasion en or, un moteur en plomb. Première panne au bout d'un mois.",
+          "impact": "pose('voiture'); patrimoine -= 9500; moral -= 4"
+        }
+      ]
+    },
+    {
+      "id": "passer",
+      "libelle": "Vous passez votre tour",
+      "issues": [
+        {
+          "texte": "Vous continuez à pied."
+        }
+      ]
+    }
+  ]
+}

@@ -40,19 +40,21 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-test("accepts a birth card and rejects a body that is not one", async () => {
+const LIFE_ID = "abcdefghijklmnopqrstuvwx";
+
+test("accepts a birth card with its life and rejects a body that is not one", async () => {
   const ok = await requestBirthWith({
     baseUrl: "http://bff.test",
-    fetchImpl: async () => json(card),
+    fetchImpl: async () => json({ lifeId: LIFE_ID, birth: card }),
   });
-  expect(ok.identity.firstName).toBe("Ada");
+  expect(ok.birth.identity.firstName).toBe("Ada");
+  expect(ok.lifeId).toBe(LIFE_ID);
 
-  await expect(
-    requestBirthWith({
-      baseUrl: "http://bff.test",
-      fetchImpl: async () => json({ identity: { firstName: "Ada" } }),
-    }),
-  ).rejects.toMatchObject({ code: "invalid_response" });
+  for (const body of [{ identity: { firstName: "Ada" } }, card, { lifeId: "court", birth: card }]) {
+    await expect(
+      requestBirthWith({ baseUrl: "http://bff.test", fetchImpl: async () => json(body) }),
+    ).rejects.toMatchObject({ code: "invalid_response" });
+  }
 });
 
 test("maps upstream errors and a dead connection", async () => {

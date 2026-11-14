@@ -1,0 +1,19 @@
+{
+  "slug": "chute-dans-l-escalier",
+  "type": "tuile",
+  "titre": "Vous glissez dans l'escalier",
+  "condition": "age >= 70",
+  "poids": "1.5",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Vous relever",
+      "issues": [
+        {
+          "texte": "Plus de peur que de mal, mais un peu de mal quand même.",
+          "impact": "sante -= 10; moral -= 3"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "don-du-sang",
+  "type": "choix",
+  "titre": "Une collecte de sang s'installe près de chez vous",
+  "condition": "age >= 18 && age <= 70 && sante >= 40",
+  "poids": "0.6",
+  "options": [
+    {
+      "id": "donner",
+      "libelle": "Vous tendez le bras",
+      "issues": [
+        {
+          "texte": "Un peu pâle, un biscuit à la main, plutôt fier.",
+          "impact": "karma += 4; sante -= 3"
+        }
+      ]
+    },
+    {
+      "id": "passer",
+      "libelle": "Vous passez votre chemin",
+      "issues": [
+        {
+          "texte": "Les aiguilles, ce sera pour une autre vie."
+        }
+      ]
+    }
+  ]
+}

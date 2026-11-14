@@ -1,0 +1,29 @@
+{
+  "slug": "vacances",
+  "type": "choix",
+  "titre": "L'été arrive. Vous partez en vacances ?",
+  "condition": "age >= 18 && patrimoine >= 800",
+  "poids": "1",
+  "options": [
+    {
+      "id": "partir",
+      "libelle": "Vous partez",
+      "issues": [
+        {
+          "texte": "Deux semaines loin de tout, sauf de vos mails.",
+          "impact": "patrimoine -= 800; moral += 8; sante += 2"
+        }
+      ]
+    },
+    {
+      "id": "rester",
+      "libelle": "Vous restez",
+      "issues": [
+        {
+          "texte": "Vous visitez votre canapé sous tous les angles.",
+          "impact": "moral -= 1"
+        }
+      ]
+    }
+  ]
+}

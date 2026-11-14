@@ -1,0 +1,19 @@
+{
+  "slug": "mal-de-dos",
+  "type": "tuile",
+  "titre": "Votre dos se rappelle à vous",
+  "condition": "age >= 30",
+  "poids": "age >= 50 ? 1 : 0.5",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Vous redresser lentement",
+      "issues": [
+        {
+          "texte": "Vous découvrez le mot « lombaires ».",
+          "impact": "sante -= 4"
+        }
+      ]
+    }
+  ]
+}

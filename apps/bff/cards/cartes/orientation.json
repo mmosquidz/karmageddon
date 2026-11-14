@@ -1,0 +1,40 @@
+{
+  "slug": "orientation",
+  "type": "etape",
+  "titre": "Le conseiller d'orientation vous demande ce que vous voulez faire de votre vie",
+  "condition": "scolarise && age >= 15 && !a('orientation')",
+  "poids": "60",
+  "unique": true,
+  "options": [
+    {
+      "id": "lycee",
+      "libelle": "Le lycée général",
+      "issues": [
+        {
+          "texte": "Trois ans de plus, et un bac au bout.",
+          "impact": "pose('orientation'); pose('lycee')"
+        }
+      ]
+    },
+    {
+      "id": "apprentissage",
+      "libelle": "Un apprentissage",
+      "issues": [
+        {
+          "texte": "Vous apprenez un métier, et vous touchez votre première paie.",
+          "impact": "pose('orientation'); pose('apprentissage'); pose('fin_etudes'); scolarise = faux; patrimoine += 300"
+        }
+      ]
+    },
+    {
+      "id": "arreter",
+      "libelle": "Vous arrêtez l'école",
+      "issues": [
+        {
+          "texte": "Plus de réveil à 7 heures. Pour l'instant.",
+          "impact": "pose('orientation'); pose('fin_etudes'); scolarise = faux; moral += 2"
+        }
+      ]
+    }
+  ]
+}

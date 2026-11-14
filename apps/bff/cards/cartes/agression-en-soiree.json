@@ -1,0 +1,21 @@
+{
+  "slug": "agression-en-soiree",
+  "type": "tuile",
+  "titre": "Lors d'une soirée, quelqu'un verse une drogue dans votre verre. Vous êtes victime d'un viol.",
+  "condition": "age >= 18",
+  "poids": "0.2",
+  "unique": true,
+  "sensible": true,
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Continuer",
+      "issues": [
+        {
+          "texte": "Rien de ce qui s'est passé n'est de votre faute.",
+          "impact": "sante -= 15; moral -= 40; social -= 10"
+        }
+      ]
+    }
+  ]
+}

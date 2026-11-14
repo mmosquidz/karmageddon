@@ -9,12 +9,16 @@
     "start": "node dist/index.js",
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.check.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "cards:validate": "tsx src/cards/cli.ts",
+    "cards:simulate": "tsx src/cards/simulate-cli.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
     "@karmageddon/contract": "0.1.0",
-    "hono": "^4.10.4"
+    "@karmageddon/engine": "0.1.0",
+    "hono": "^4.10.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

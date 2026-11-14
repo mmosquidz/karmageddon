@@ -1,0 +1,35 @@
+{
+  "slug": "arreter-de-fumer",
+  "type": "pari",
+  "titre": "Le paquet est presque vide",
+  "condition": "a('fumeur') && age >= 20",
+  "poids": "0.6",
+  "options": [
+    {
+      "id": "essayer",
+      "libelle": "Vous essayez d'arrêter",
+      "issues": [
+        {
+          "poids": "1",
+          "texte": "Vous tenez bon. Votre souffle revient.",
+          "impact": "retire('fumeur'); sante += 5; moral += 4"
+        },
+        {
+          "poids": "2",
+          "texte": "Trois jours, puis une soirée.",
+          "impact": "moral -= 3"
+        }
+      ]
+    },
+    {
+      "id": "continuer",
+      "libelle": "Vous en rachetez un",
+      "issues": [
+        {
+          "texte": "Le buraliste vous salue par votre prénom.",
+          "impact": "sante -= 3"
+        }
+      ]
+    }
+  ]
+}

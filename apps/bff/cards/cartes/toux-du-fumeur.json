@@ -1,0 +1,19 @@
+{
+  "slug": "toux-du-fumeur",
+  "type": "retour_de_baton",
+  "titre": "Une toux qui ne passe plus",
+  "condition": "a('fumeur') && age >= 40",
+  "poids": "0.8",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Aller chez le médecin",
+      "issues": [
+        {
+          "texte": "Le médecin vous montre une radio. Vous la regardez longtemps.",
+          "impact": "sante -= 8; moral -= 3"
+        }
+      ]
+    }
+  ]
+}

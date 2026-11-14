@@ -1,0 +1,30 @@
+{
+  "slug": "loterie",
+  "type": "chance",
+  "titre": "Vous gagnez à la loterie",
+  "condition": "age >= 18",
+  "poids": "0.1 + karma / 500",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Encaisser",
+      "issues": [
+        {
+          "poids": "20",
+          "texte": "De quoi rembourser le ticket et offrir une tournée.",
+          "impact": "patrimoine += 100; moral += 2"
+        },
+        {
+          "poids": "5",
+          "texte": "Une somme qui se remarque sur un relevé de compte.",
+          "impact": "patrimoine += 5000; moral += 8"
+        },
+        {
+          "poids": "1",
+          "texte": "Le gros lot. Votre banquier se souvient enfin de votre prénom.",
+          "impact": "patrimoine += 500000; moral += 20; social += 5"
+        }
+      ]
+    }
+  ]
+}

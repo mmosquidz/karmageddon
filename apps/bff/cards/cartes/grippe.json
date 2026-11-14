@@ -1,0 +1,19 @@
+{
+  "slug": "grippe",
+  "type": "tuile",
+  "titre": "Une grippe vous cloue au lit",
+  "condition": "age >= 1",
+  "poids": "a('fumeur') ? 1.5 : a('sportif') ? 0.4 : 0.7",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Remonter la couette",
+      "issues": [
+        {
+          "texte": "Une semaine de tisanes et de séries.",
+          "impact": "sante -= entier(2, 6); moral -= 2"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "slug": "placement-en-bourse",
+  "type": "pari",
+  "titre": "Votre banque vous propose de placer vos économies",
+  "condition": "emploi && patrimoine >= 2000",
+  "poids": "0.5",
+  "variables": [
+    {
+      "nom": "marche",
+      "valeur": "entier(-30, 30)"
+    }
+  ],
+  "options": [
+    {
+      "id": "prudent",
+      "libelle": "Un placement prudent",
+      "issues": [
+        {
+          "condition": "marche >= 0",
+          "texte": "Le placement rapporte un peu.",
+          "impact": "patrimoine += arrondi(min(patrimoine, 20000) * marche / 400)"
+        },
+        {
+          "condition": "marche < 0",
+          "texte": "Le placement perd un peu.",
+          "impact": "patrimoine += arrondi(min(patrimoine, 20000) * marche / 400)"
+        }
+      ]
+    },
+    {
+      "id": "audacieux",
+      "libelle": "Un placement audacieux",
+      "issues": [
+        {
+          "condition": "marche >= 0",
+          "texte": "Jackpot, ou presque.",
+          "impact": "patrimoine += arrondi(min(patrimoine, 20000) * marche / 100); moral += 3"
+        },
+        {
+          "condition": "marche < 0",
+          "texte": "Vous apprenez le sens du mot « volatilité ».",
+          "impact": "patrimoine += arrondi(min(patrimoine, 20000) * marche / 100); moral -= 5"
+        }
+      ]
+    },
+    {
+      "id": "rien",
+      "libelle": "Vous laissez l'argent dormir",
+      "issues": [
+        {
+          "texte": "Il dort bien. Vous aussi."
+        }
+      ]
+    }
+  ]
+}

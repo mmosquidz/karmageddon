@@ -1,0 +1,19 @@
+{
+  "slug": "pension",
+  "type": "chance",
+  "titre": "Votre pension est revalorisée",
+  "condition": "a('retraite')",
+  "poids": "1.5",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Lire le courrier",
+      "issues": [
+        {
+          "texte": "Le courrier commence par « Madame, Monsieur », et finit bien.",
+          "impact": "patrimoine += a('cadre') ? 1500 : 800; moral += 1"
+        }
+      ]
+    }
+  ]
+}

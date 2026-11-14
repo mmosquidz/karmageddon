@@ -1,0 +1,36 @@
+{
+  "slug": "colis-reclame",
+  "type": "retour_de_baton",
+  "titre": "Le vrai destinataire du colis sonne à votre porte",
+  "condition": "a('colis_billets')",
+  "poids": "2",
+  "unique": true,
+  "options": [
+    {
+      "id": "rendre",
+      "libelle": "Vous rendez l'argent",
+      "issues": [
+        {
+          "texte": "Il vous serre la main longtemps. Très longtemps.",
+          "impact": "patrimoine -= 500; social += 3; karma += 6; retire('colis_billets')"
+        }
+      ]
+    },
+    {
+      "id": "nier",
+      "libelle": "Vous niez tout",
+      "issues": [
+        {
+          "poids": "2",
+          "texte": "Il vous croit. Vous gardez l'argent, et vous dormez mal.",
+          "impact": "moral -= 3; karma -= 6; retire('colis_billets')"
+        },
+        {
+          "poids": "1",
+          "texte": "La caméra du hall ne ment pas. L'amende non plus.",
+          "impact": "patrimoine -= 1200; social -= 8; karma -= 6; retire('colis_billets')"
+        }
+      ]
+    }
+  ]
+}

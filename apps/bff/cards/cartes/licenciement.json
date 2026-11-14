@@ -1,0 +1,19 @@
+{
+  "slug": "licenciement",
+  "type": "tuile",
+  "titre": "Votre poste est supprimé",
+  "condition": "emploi && age >= 20 && age < 62",
+  "poids": "0.4",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Vider votre bureau",
+      "issues": [
+        {
+          "texte": "Un carton, une indemnité, un pot de départ un peu gêné.",
+          "impact": "emploi = faux; moral -= 15; patrimoine += 2000"
+        }
+      ]
+    }
+  ]
+}

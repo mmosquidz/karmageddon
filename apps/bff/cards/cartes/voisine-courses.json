@@ -1,0 +1,29 @@
+{
+  "slug": "voisine-courses",
+  "type": "choix",
+  "titre": "Votre voisine du dessus ne peut plus porter ses courses",
+  "condition": "age >= 14 && age <= 75",
+  "poids": "0.5",
+  "options": [
+    {
+      "id": "aider",
+      "libelle": "Vous montez ses sacs chaque samedi",
+      "issues": [
+        {
+          "texte": "Quatre étages sans ascenseur. Elle vous garde toujours une part de gâteau.",
+          "impact": "karma += 3; social += 1; moral -= 2"
+        }
+      ]
+    },
+    {
+      "id": "ignorer",
+      "libelle": "Vous avez votre propre vie",
+      "issues": [
+        {
+          "texte": "Vous la croisez dans l'escalier. Vous regardez votre téléphone.",
+          "impact": "karma -= 1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "slug": "coup-de-foudre",
+  "type": "rencontre",
+  "titre": "Un regard croisé dans une file d'attente",
+  "condition": "!couple && age >= 18 && age <= 75",
+  "poids": "0.8 + social / 50",
+  "options": [
+    {
+      "id": "aborder",
+      "libelle": "Vous engagez la conversation",
+      "issues": [
+        {
+          "poids": "1 + social / 20",
+          "texte": "Le courant passe. Vous voilà en couple.",
+          "impact": "couple = vrai; moral += 10"
+        },
+        {
+          "poids": "2",
+          "texte": "Un sourire poli, puis plus rien.",
+          "impact": "moral -= 4"
+        }
+      ]
+    },
+    {
+      "id": "laisser",
+      "libelle": "Vous laissez passer",
+      "issues": [
+        {
+          "texte": "Vous y repenserez sous la douche.",
+          "impact": "moral -= 1"
+        }
+      ]
+    }
+  ]
+}

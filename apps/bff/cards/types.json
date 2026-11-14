@@ -1,0 +1,13 @@
+[
+  { "slug": "chance", "libelle": "Chance" },
+  { "slug": "tuile", "libelle": "Tuile" },
+  { "slug": "choix", "libelle": "Choix" },
+  { "slug": "choix_mystere", "libelle": "Choix mystère" },
+  { "slug": "epreuve", "libelle": "Épreuve" },
+  { "slug": "etape", "libelle": "Étape de vie" },
+  { "slug": "rencontre", "libelle": "Rencontre" },
+  { "slug": "opportunite", "libelle": "Opportunité" },
+  { "slug": "pari", "libelle": "Pari" },
+  { "slug": "retour_de_baton", "libelle": "Retour de bâton" },
+  { "slug": "dilemme", "libelle": "Dilemme" }
+]

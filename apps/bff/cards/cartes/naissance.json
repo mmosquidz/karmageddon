@@ -1,0 +1,28 @@
+{
+  "slug": "naissance",
+  "type": "etape",
+  "titre": "Vous parlez d'avoir un enfant",
+  "condition": "couple && age >= 20 && age <= 45 && enfants < 4",
+  "poids": "enfants == 0 ? 4 : 1.5",
+  "options": [
+    {
+      "id": "oui",
+      "libelle": "Vous agrandissez la famille",
+      "issues": [
+        {
+          "texte": "Un enfant arrive dans votre vie.",
+          "impact": "enfants += 1; moral += 10; patrimoine -= 1500; sante -= 2"
+        }
+      ]
+    },
+    {
+      "id": "pas_maintenant",
+      "libelle": "Pas maintenant",
+      "issues": [
+        {
+          "texte": "Vous en reparlerez plus tard."
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import type { BirthErrorCode } from "../api/births.js";
+import type { LifeErrorCode } from "../api/lives.js";
 
 const LINES = [
   "Le sort a parlé. Il n’a pas demandé votre avis.",
@@ -34,5 +35,22 @@ export function errorMessage(error: { code: BirthErrorCode; retryAfterSeconds?: 
       return "La réponse reçue n’est pas une fiche de naissance. Réessayez.";
     case "server":
       return "La simulation est momentanément indisponible. Réessayez.";
+  }
+}
+
+export function lifeErrorMessage(code: LifeErrorCode): string {
+  switch (code) {
+    case "network":
+      return "Le jeu ne répond pas. Vérifiez la connexion, puis réessayez.";
+    case "timeout":
+      return "L’année prend trop de temps à passer. Réessayez.";
+    case "lost":
+      return "Cette vie n’est plus en mémoire : le serveur a redémarré ou elle est restée trop longtemps en pause. Il faut renaître.";
+    case "card":
+      return "Cette carte n’a pas pu se jouer. Elle est mise de côté : passez à l’année suivante.";
+    case "invalid_response":
+      return "La réponse reçue n’est pas une carte. Réessayez.";
+    case "server":
+      return "Le jeu est momentanément indisponible. Réessayez.";
   }
 }

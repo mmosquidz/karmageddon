@@ -1,0 +1,36 @@
+{
+  "slug": "triche-a-l-examen",
+  "type": "dilemme",
+  "titre": "Votre voisin de table a laissé sa copie bien en vue",
+  "condition": "scolarise && age >= 10 && age <= 18",
+  "poids": "0.6",
+  "unique": true,
+  "options": [
+    {
+      "id": "tricher",
+      "libelle": "Vous jetez un œil",
+      "issues": [
+        {
+          "poids": "3",
+          "texte": "Personne ne voit rien. Vous n'avez rien appris non plus.",
+          "impact": "moral += 2; karma -= 5"
+        },
+        {
+          "poids": "1",
+          "texte": "Pris la main dans la trousse.",
+          "impact": "social -= 6; moral -= 6; karma -= 5"
+        }
+      ]
+    },
+    {
+      "id": "honnete",
+      "libelle": "Vous faites de votre mieux",
+      "issues": [
+        {
+          "texte": "Une note moyenne, et la conscience tranquille.",
+          "impact": "karma += 2; moral -= 1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "slug": "prime-de-fin-d-annee",
+  "type": "chance",
+  "titre": "Votre prime de fin d'année tombe",
+  "condition": "emploi",
+  "poids": "1.5",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Regarder votre relevé",
+      "issues": [
+        {
+          "texte": "Un virement que vous relisez deux fois.",
+          "impact": "patrimoine += a('entrepreneur') ? 4000 : a('cadre') ? 3000 : 1500; moral += 2"
+        }
+      ]
+    }
+  ]
+}

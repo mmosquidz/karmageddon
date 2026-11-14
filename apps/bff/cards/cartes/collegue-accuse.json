@@ -1,0 +1,35 @@
+{
+  "slug": "collegue-accuse",
+  "type": "dilemme",
+  "titre": "Un collègue est accusé d'une erreur que vous savez être la vôtre",
+  "condition": "emploi && age >= 20",
+  "poids": "0.5",
+  "options": [
+    {
+      "id": "avouer",
+      "libelle": "Vous levez la main",
+      "issues": [
+        {
+          "poids": "2",
+          "texte": "Votre chef apprécie la franchise. Votre prime, moins.",
+          "impact": "karma += 6; patrimoine -= 1500"
+        },
+        {
+          "poids": "1",
+          "texte": "On vous retire le dossier. Votre collègue vous offre un café chaque matin.",
+          "impact": "karma += 6; moral -= 5; social += 2"
+        }
+      ]
+    },
+    {
+      "id": "taire",
+      "libelle": "Vous vous taisez",
+      "issues": [
+        {
+          "texte": "Il prend un avertissement. Vous prenez l'habitude d'éviter son regard.",
+          "impact": "karma -= 6; social -= 1"
+        }
+      ]
+    }
+  ]
+}

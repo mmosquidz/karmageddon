@@ -1,19 +1,20 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import { fly } from "svelte/transition";
-  import type { BirthCard } from "@karmageddon/contract";
+  import type { BirthResponse } from "@karmageddon/contract";
   import { BirthRequestError, requestBirth } from "$lib/api/births";
   import BirthCertificate from "$lib/components/BirthCard.svelte";
   import ErrorNotice from "$lib/components/ErrorNotice.svelte";
   import FamilyPanel from "$lib/components/FamilyPanel.svelte";
   import HomeScreen from "$lib/components/HomeScreen.svelte";
+  import LifeScreen from "$lib/components/LifeScreen.svelte";
   import LoadingVeil from "$lib/components/LoadingVeil.svelte";
   import { Button } from "$lib/components/ui/button";
 
-  type Phase = "idle" | "loading" | "revealed" | "error";
+  type Phase = "idle" | "loading" | "revealed" | "living" | "error";
 
   let phase = $state<Phase>("idle");
-  let card = $state<BirthCard | null>(null);
+  let born = $state<BirthResponse | null>(null);
   let failure = $state<BirthRequestError | null>(null);
   let reduceMotion = $state(false);
   let busy = false;
@@ -29,7 +30,7 @@
     return () => media.removeEventListener("change", onChange);
   });
 
-  async function born() {
+  async function beBorn() {
     if (busy) {
       return;
     }
@@ -44,7 +45,7 @@
       if (current.signal.aborted) {
         return;
       }
-      card = next;
+      born = next;
       phase = "revealed";
     } catch (error) {
       if (current.signal.aborted) {
@@ -59,11 +60,18 @@
     }
   }
 
+  function live() {
+    if (born !== null) {
+      phase = "living";
+      window.scrollTo({ top: 0 });
+    }
+  }
+
   function again() {
     controller?.abort();
     controller = null;
     busy = false;
-    card = null;
+    born = null;
     failure = null;
     phase = "idle";
   }
@@ -77,21 +85,22 @@
 
 <main>
   {#if phase === "idle"}
-    <HomeScreen pending={false} onBorn={born} />
+    <HomeScreen pending={false} onBorn={beBorn} />
   {:else if phase === "loading"}
     <LoadingVeil />
   {:else if phase === "error" && failure}
-    <ErrorNotice error={failure} onRetry={born} />
-  {:else if phase === "revealed" && card}
+    <ErrorNotice error={failure} onRetry={beBorn} />
+  {:else if phase === "revealed" && born}
     <div
       class="mx-auto w-full max-w-5xl px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] sm:py-12"
       in:fly={{ y: reduceMotion ? 0 : 18, duration: reduceMotion ? 0 : 420 }}
     >
       <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <BirthCertificate {card} />
-        <FamilyPanel {card} />
+        <BirthCertificate card={born.birth} />
+        <FamilyPanel card={born.birth} />
       </div>
-      <div class="mt-6 flex justify-center">
+      <div class="mt-6 flex flex-wrap justify-center gap-3">
+        <Button class="h-11 px-8" onclick={live} data-testid="live">Vivre cette vie</Button>
         <Button
           variant="outline"
           class="h-11 border-white/25 bg-transparent px-6 text-white hover:bg-white/10 hover:text-white"
@@ -102,5 +111,14 @@
         </Button>
       </div>
     </div>
+  {:else if phase === "living" && born}
+    {#key born.lifeId}
+      <LifeScreen
+        lifeId={born.lifeId}
+        firstName={born.birth.identity.firstName}
+        sex={born.birth.identity.sex}
+        onNewLife={again}
+      />
+    {/key}
   {/if}
 </main>

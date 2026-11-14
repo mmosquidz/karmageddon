@@ -1,0 +1,19 @@
+{
+  "slug": "bras-casse",
+  "type": "tuile",
+  "titre": "Vous vous cassez le bras",
+  "condition": "age >= 3",
+  "poids": "a('velo') ? 0.6 : 0.4",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Serrer les dents",
+      "issues": [
+        {
+          "texte": "Six semaines de plâtre.",
+          "impact": "sante -= 8; moral -= 3"
+        }
+      ]
+    }
+  ]
+}

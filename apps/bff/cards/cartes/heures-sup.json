@@ -1,0 +1,29 @@
+{
+  "slug": "heures-sup",
+  "type": "dilemme",
+  "titre": "Votre chef vous demande de rester tard ce mois-ci",
+  "condition": "emploi",
+  "poids": "1",
+  "options": [
+    {
+      "id": "accepter",
+      "libelle": "Vous acceptez",
+      "issues": [
+        {
+          "texte": "Votre compte en banque vous remercie. Votre dos, moins.",
+          "impact": "patrimoine += 800; sante -= 3; social -= 2"
+        }
+      ]
+    },
+    {
+      "id": "refuser",
+      "libelle": "Vous partez à l'heure",
+      "issues": [
+        {
+          "texte": "Personne n'en est mort.",
+          "impact": "moral += 2"
+        }
+      ]
+    }
+  ]
+}

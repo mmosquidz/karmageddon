@@ -1,0 +1,19 @@
+{
+  "slug": "recommandation",
+  "type": "opportunite",
+  "titre": "Votre mentor passe un coup de fil pour vous",
+  "condition": "a('mentor') && a('premier_emploi') && !emploi && !a('au_foyer') && !a('retraite') && age < 62",
+  "poids": "2.5 + karma / 100",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Décrocher",
+      "issues": [
+        {
+          "texte": "Un poste se libère. Vous n'avez même pas eu à passer d'entretien.",
+          "impact": "emploi = vrai; moral += 6"
+        }
+      ]
+    }
+  ]
+}

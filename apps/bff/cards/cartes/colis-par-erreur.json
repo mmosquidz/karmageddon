@@ -1,0 +1,40 @@
+{
+  "slug": "colis-par-erreur",
+  "type": "choix_mystere",
+  "titre": "Un colis vous est livré par erreur. Vous l'ouvrez ?",
+  "condition": "age >= 18",
+  "poids": "0.5",
+  "options": [
+    {
+      "id": "ouvrir",
+      "libelle": "Vous l'ouvrez",
+      "issues": [
+        {
+          "poids": "3",
+          "texte": "Des chaussettes. Pas à votre taille.",
+          "impact": "moral += 1; karma -= 2"
+        },
+        {
+          "poids": "2",
+          "texte": "Un grille-pain. Vous aviez justement faim.",
+          "impact": "moral += 3; karma -= 2"
+        },
+        {
+          "poids": "1",
+          "texte": "Une liasse de billets. Vous regardez la rue autrement.",
+          "impact": "patrimoine += 500; social -= 5; karma -= 6; pose('colis_billets')"
+        }
+      ]
+    },
+    {
+      "id": "rendre",
+      "libelle": "Vous le rapportez",
+      "issues": [
+        {
+          "texte": "Le voisin vous remercie.",
+          "impact": "social += 2; karma += 4"
+        }
+      ]
+    }
+  ]
+}

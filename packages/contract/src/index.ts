@@ -23,3 +23,21 @@ export {
   type Sex,
   type Work,
 } from "./birth-card.js";
+export {
+  birthResponseSchema,
+  choiceRequestSchema,
+  lifeCardSchema,
+  lifeChoiceSchema,
+  lifeIdSchema,
+  lifeStatusSchema,
+  outcomeSchema,
+  turnSchema,
+  type BirthResponse,
+  type ChoiceRequest,
+  type LifeCard,
+  type LifeChoice,
+  type LifeId,
+  type LifeStatus,
+  type Outcome,
+  type Turn,
+} from "./life.js";

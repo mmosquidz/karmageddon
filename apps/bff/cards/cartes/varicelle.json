@@ -1,0 +1,20 @@
+{
+  "slug": "varicelle",
+  "type": "tuile",
+  "titre": "Vous attrapez la varicelle",
+  "condition": "age >= 2 && age <= 10",
+  "poids": "3",
+  "unique": true,
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Ne pas gratter",
+      "issues": [
+        {
+          "texte": "Dix jours de boutons et d'interdiction de gratter.",
+          "impact": "sante -= 3; moral -= 2"
+        }
+      ]
+    }
+  ]
+}

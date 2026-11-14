@@ -1,0 +1,19 @@
+{
+  "slug": "rupture",
+  "type": "tuile",
+  "titre": "Votre couple prend fin",
+  "condition": "couple && age >= 18",
+  "poids": "0.3",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Faire les cartons",
+      "issues": [
+        {
+          "texte": "Vous vous séparez. Il faut tout réorganiser.",
+          "impact": "couple = faux; retire('installe'); retire('marie'); moral -= 15; social -= 3"
+        }
+      ]
+    }
+  ]
+}

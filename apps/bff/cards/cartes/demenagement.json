@@ -1,0 +1,28 @@
+{
+  "slug": "demenagement",
+  "type": "choix",
+  "titre": "Un appartement se libère dans une autre ville",
+  "condition": "age >= 20",
+  "poids": "0.3",
+  "options": [
+    {
+      "id": "changer",
+      "libelle": "Vous déménagez",
+      "issues": [
+        {
+          "texte": "Nouveaux cartons, nouveaux voisins.",
+          "impact": "patrimoine -= 1500; social -= 5; moral += 4"
+        }
+      ]
+    },
+    {
+      "id": "rester",
+      "libelle": "Vous restez",
+      "issues": [
+        {
+          "texte": "Vous gardez vos repères et votre boulangerie."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "slug": "fin-de-scolarite",
+  "type": "etape",
+  "titre": "Vous quittez le lycée sans le bac",
+  "condition": "scolarise && a('lycee') && !a('bac') && age >= 21",
+  "poids": "60",
+  "unique": true,
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Tourner la page",
+      "issues": [
+        {
+          "texte": "Le monde du travail ne vous a pas demandé votre avis, mais il vous attend.",
+          "impact": "scolarise = faux; pose('fin_etudes'); moral -= 3"
+        }
+      ]
+    }
+  ]
+}

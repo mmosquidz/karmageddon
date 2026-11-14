@@ -1,0 +1,36 @@
+{
+  "slug": "portefeuille-perdu",
+  "type": "dilemme",
+  "titre": "Un portefeuille traîne sur un banc, bien garni",
+  "condition": "age >= 12",
+  "poids": "0.5",
+  "variables": [{ "nom": "somme", "valeur": "entier(10, 60) * 10" }],
+  "options": [
+    {
+      "id": "rapporter",
+      "libelle": "Vous le rapportez à son propriétaire",
+      "issues": [
+        {
+          "poids": "3",
+          "texte": "Une heure à chercher l'adresse. Un merci sur le pas de la porte.",
+          "impact": "karma += 6; moral -= 2"
+        },
+        {
+          "poids": "1",
+          "texte": "Le propriétaire insiste pour vous offrir le déjeuner.",
+          "impact": "karma += 6; social += 2"
+        }
+      ]
+    },
+    {
+      "id": "garder",
+      "libelle": "Vous gardez les billets",
+      "issues": [
+        {
+          "texte": "Le portefeuille finit dans une poubelle. Les billets, dans votre poche.",
+          "impact": "patrimoine += somme; karma -= 6"
+        }
+      ]
+    }
+  ]
+}

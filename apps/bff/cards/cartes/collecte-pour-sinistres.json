@@ -1,0 +1,29 @@
+{
+  "slug": "collecte-pour-sinistres",
+  "type": "dilemme",
+  "titre": "Une inondation a tout emporté dans la région voisine. On collecte des dons",
+  "condition": "age >= 18 && patrimoine >= 200",
+  "poids": "0.5",
+  "options": [
+    {
+      "id": "donner",
+      "libelle": "Vous donnez une vraie somme",
+      "issues": [
+        {
+          "texte": "Votre relevé de compte fait la grimace. Pas vous.",
+          "impact": "patrimoine -= max(200, arrondi(patrimoine / 10)); karma += 5"
+        }
+      ]
+    },
+    {
+      "id": "regard",
+      "libelle": "Vous changez de chaîne",
+      "issues": [
+        {
+          "texte": "Le reportage suivant parle de cuisine.",
+          "impact": "karma -= 2"
+        }
+      ]
+    }
+  ]
+}

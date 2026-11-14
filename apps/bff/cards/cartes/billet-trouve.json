@@ -1,0 +1,29 @@
+{
+  "slug": "billet-trouve",
+  "type": "dilemme",
+  "titre": "Vous trouvez un billet par terre",
+  "condition": "age >= 6",
+  "poids": "0.5",
+  "options": [
+    {
+      "id": "garder",
+      "libelle": "Vous le gardez",
+      "issues": [
+        {
+          "texte": "Pas de propriétaire en vue. Bonne journée, pour vous.",
+          "impact": "patrimoine += 20; moral += 1; karma -= 2"
+        }
+      ]
+    },
+    {
+      "id": "deposer",
+      "libelle": "Vous le déposez aux objets trouvés",
+      "issues": [
+        {
+          "texte": "Vingt minutes de file d'attente pour un formulaire en trois exemplaires.",
+          "impact": "moral -= 1; karma += 2"
+        }
+      ]
+    }
+  ]
+}

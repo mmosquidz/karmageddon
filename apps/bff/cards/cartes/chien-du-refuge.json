@@ -1,0 +1,29 @@
+{
+  "slug": "chien-du-refuge",
+  "type": "choix",
+  "titre": "Au refuge, un vieux chien vous fixe à travers les barreaux",
+  "condition": "age >= 20 && !a('chien')",
+  "poids": "0.4",
+  "options": [
+    {
+      "id": "adopter",
+      "libelle": "Vous l'adoptez",
+      "issues": [
+        {
+          "texte": "Il ronfle, il perd ses poils, il vous attend derrière la porte.",
+          "impact": "pose('chien'); karma += 3; moral += 3; patrimoine -= 1200"
+        }
+      ]
+    },
+    {
+      "id": "partir",
+      "libelle": "Vous repartez seul",
+      "issues": [
+        {
+          "texte": "Le regard vous suit jusqu'au parking.",
+          "impact": "moral -= 1"
+        }
+      ]
+    }
+  ]
+}

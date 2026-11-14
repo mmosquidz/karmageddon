@@ -1,0 +1,20 @@
+{
+  "slug": "retraite",
+  "type": "etape",
+  "titre": "Vous prenez votre retraite",
+  "condition": "age >= 62 && !a('retraite')",
+  "poids": "60",
+  "unique": true,
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Ranger le réveil",
+      "issues": [
+        {
+          "texte": "Vous voilà officiellement à la retraite. Le réveil reste dans le tiroir.",
+          "impact": "emploi = faux; retire('au_foyer'); pose('retraite'); moral += 10"
+        }
+      ]
+    }
+  ]
+}

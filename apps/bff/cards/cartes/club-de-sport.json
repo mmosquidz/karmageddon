@@ -1,0 +1,29 @@
+{
+  "slug": "club-de-sport",
+  "type": "choix",
+  "titre": "Le club de sport du quartier cherche des membres",
+  "condition": "age >= 8 && age <= 50 && !a('sportif')",
+  "poids": "0.8",
+  "options": [
+    {
+      "id": "inscrire",
+      "libelle": "Vous vous inscrivez",
+      "issues": [
+        {
+          "texte": "Vous découvrez les vestiaires et leur odeur.",
+          "impact": "pose('sportif'); sante += 5; social += 3; patrimoine -= 100"
+        }
+      ]
+    },
+    {
+      "id": "canape",
+      "libelle": "Vous restez sur le canapé",
+      "issues": [
+        {
+          "texte": "Le canapé apprécie votre fidélité.",
+          "impact": "moral += 1"
+        }
+      ]
+    }
+  ]
+}

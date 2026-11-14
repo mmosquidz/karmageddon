@@ -1,0 +1,46 @@
+{
+  "slug": "creer-son-entreprise",
+  "type": "pari",
+  "titre": "Une idée d'entreprise ne vous lâche plus",
+  "condition": "emploi && age >= 25 && age <= 55 && patrimoine >= 5000 && !a('entrepreneur')",
+  "poids": "0.4",
+  "variables": [
+    {
+      "nom": "reussite",
+      "valeur": "entier(1, 100) + (a('diplome_sup') ? 10 : 0) + arrondi((social - 50) / 5)"
+    }
+  ],
+  "options": [
+    {
+      "id": "se_lancer",
+      "libelle": "Vous vous lancez",
+      "issues": [
+        {
+          "condition": "reussite >= 70",
+          "texte": "Ça marche. Vous signez vos propres fiches de paie.",
+          "impact": "pose('entrepreneur'); patrimoine += 30000; moral += 10"
+        },
+        {
+          "condition": "reussite >= 40 && reussite < 70",
+          "texte": "Ça tient, à peine. Vous travaillez deux fois plus pour le même résultat.",
+          "impact": "pose('entrepreneur'); sante -= 5; moral -= 2"
+        },
+        {
+          "condition": "reussite < 40",
+          "texte": "Faillite. Vous connaissez maintenant votre banquier par son prénom.",
+          "impact": "patrimoine -= 5000; emploi = faux; moral -= 15"
+        }
+      ]
+    },
+    {
+      "id": "rester",
+      "libelle": "Vous restez salarié",
+      "issues": [
+        {
+          "texte": "Le projet reste dans un carnet.",
+          "impact": "moral -= 1"
+        }
+      ]
+    }
+  ]
+}

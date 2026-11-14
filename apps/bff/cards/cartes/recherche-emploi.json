@@ -1,0 +1,31 @@
+{
+  "slug": "recherche-emploi",
+  "type": "epreuve",
+  "titre": "Vous cherchez un nouveau travail",
+  "condition": "a('premier_emploi') && !emploi && !a('au_foyer') && !a('retraite') && age < 62",
+  "poids": "20",
+  "variables": [
+    {
+      "nom": "score",
+      "valeur": "entier(1, 100) + (a('diplome_sup') ? 25 : a('bac') ? 10 : 0) + (a('mentor') ? 15 : 0) - (age >= 50 ? 15 : 0)"
+    }
+  ],
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Envoyer des candidatures",
+      "issues": [
+        {
+          "condition": "score >= 50",
+          "texte": "Un nouveau poste. Nouveau badge, même café.",
+          "impact": "emploi = vrai; moral += 8"
+        },
+        {
+          "condition": "score < 50",
+          "texte": "Rien cette année. Le silence est la langue officielle des recruteurs.",
+          "impact": "moral -= 6"
+        }
+      ]
+    }
+  ]
+}

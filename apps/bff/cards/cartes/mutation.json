@@ -1,0 +1,29 @@
+{
+  "slug": "mutation",
+  "type": "dilemme",
+  "titre": "On vous propose une mutation à l'autre bout du pays",
+  "condition": "emploi && age >= 25",
+  "poids": "0.4",
+  "options": [
+    {
+      "id": "accepter",
+      "libelle": "Vous partez",
+      "issues": [
+        {
+          "texte": "Une ville inconnue, un salaire en hausse.",
+          "impact": "patrimoine += 3000; social -= 8; moral -= 2"
+        }
+      ]
+    },
+    {
+      "id": "refuser",
+      "libelle": "Vous restez",
+      "issues": [
+        {
+          "texte": "Votre chef note votre attachement au territoire.",
+          "impact": "moral -= 2"
+        }
+      ]
+    }
+  ]
+}

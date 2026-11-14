@@ -1,0 +1,20 @@
+{
+  "slug": "retrouvailles",
+  "type": "retour_de_baton",
+  "titre": "Vous croisez votre ami d'enfance",
+  "condition": "a('ami_enfance') && age >= 35",
+  "poids": "0.6",
+  "unique": true,
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Prendre un café",
+      "issues": [
+        {
+          "texte": "Des années plus tard, vous riez toujours des mêmes choses.",
+          "impact": "social += 6; moral += 6"
+        }
+      ]
+    }
+  ]
+}

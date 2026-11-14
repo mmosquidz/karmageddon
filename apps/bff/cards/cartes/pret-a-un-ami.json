@@ -1,0 +1,35 @@
+{
+  "slug": "pret-a-un-ami",
+  "type": "dilemme",
+  "titre": "Un ami vous demande de lui prêter de l'argent",
+  "condition": "age >= 20 && patrimoine >= 500",
+  "poids": "0.5",
+  "options": [
+    {
+      "id": "preter",
+      "libelle": "Vous prêtez",
+      "issues": [
+        {
+          "poids": "2",
+          "texte": "Il vous rembourse. Avec un gâteau.",
+          "impact": "social += 4; karma += 3"
+        },
+        {
+          "poids": "1",
+          "texte": "Vous ne revoyez ni l'argent, ni l'ami.",
+          "impact": "patrimoine -= 500; social -= 4; karma += 3"
+        }
+      ]
+    },
+    {
+      "id": "refuser",
+      "libelle": "Vous refusez",
+      "issues": [
+        {
+          "texte": "L'ambiance est fraîche pendant quelque temps.",
+          "impact": "social -= 3; karma -= 1"
+        }
+      ]
+    }
+  ]
+}

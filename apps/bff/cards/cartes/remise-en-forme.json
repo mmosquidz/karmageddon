@@ -1,0 +1,29 @@
+{
+  "slug": "remise-en-forme",
+  "type": "choix",
+  "titre": "Votre médecin vous conseille de prendre soin de vous",
+  "condition": "age >= 20 && sante < 40",
+  "poids": "sante < 20 ? 6 : 3",
+  "options": [
+    {
+      "id": "marcher",
+      "libelle": "Vous marchez chaque jour",
+      "issues": [
+        {
+          "texte": "Trente minutes par jour. Les escaliers ne vous font plus peur.",
+          "impact": "sante += 12; moral += 3"
+        }
+      ]
+    },
+    {
+      "id": "plus_tard",
+      "libelle": "Vous verrez plus tard",
+      "issues": [
+        {
+          "texte": "Le conseil rejoint les autres, sur la pile.",
+          "impact": "moral -= 1"
+        }
+      ]
+    }
+  ]
+}

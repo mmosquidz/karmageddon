@@ -1,0 +1,29 @@
+{
+  "slug": "piston",
+  "type": "dilemme",
+  "titre": "Un ami vous demande de faire embaucher son fils, moins qualifié que les autres candidats",
+  "condition": "emploi && age >= 30",
+  "poids": "0.4",
+  "options": [
+    {
+      "id": "pistonner",
+      "libelle": "Vous glissez un mot",
+      "issues": [
+        {
+          "texte": "Il est pris. Le meilleur candidat, non. Votre ami vous invite à dîner.",
+          "impact": "social += 4; karma -= 5"
+        }
+      ]
+    },
+    {
+      "id": "refuser",
+      "libelle": "Vous laissez le recrutement se faire",
+      "issues": [
+        {
+          "texte": "Votre ami trouve que vous avez changé.",
+          "impact": "social -= 3; karma += 3"
+        }
+      ]
+    }
+  ]
+}

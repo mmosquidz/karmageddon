@@ -1,0 +1,19 @@
+{
+  "slug": "fete-surprise",
+  "type": "chance",
+  "titre": "Vos amis vous organisent une fête surprise",
+  "condition": "age >= 4",
+  "poids": "0.5",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Faire semblant d'être surpris",
+      "issues": [
+        {
+          "texte": "Vous jouez la surprise. Très bien, d'ailleurs.",
+          "impact": "social += 4; moral += 4"
+        }
+      ]
+    }
+  ]
+}

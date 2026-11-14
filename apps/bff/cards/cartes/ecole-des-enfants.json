@@ -1,0 +1,29 @@
+{
+  "slug": "ecole-des-enfants",
+  "type": "choix",
+  "titre": "École privée ou école publique pour les enfants ?",
+  "condition": "parent",
+  "unique": true,
+  "options": [
+    {
+      "id": "privee",
+      "libelle": "L'école privée",
+      "issues": [
+        {
+          "texte": "Les frais d'inscription passent avant les vacances.",
+          "impact": "patrimoine -= 3000; social += 2"
+        }
+      ]
+    },
+    {
+      "id": "publique",
+      "libelle": "L'école publique",
+      "issues": [
+        {
+          "texte": "L'école du quartier, à dix minutes à pied.",
+          "impact": "moral += 2"
+        }
+      ]
+    }
+  ]
+}

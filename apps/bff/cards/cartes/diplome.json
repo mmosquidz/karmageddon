@@ -1,0 +1,36 @@
+{
+  "slug": "diplome",
+  "type": "epreuve",
+  "titre": "Vous passez vos examens de fin d'études",
+  "condition": "scolarise && a('etudes_sup') && age >= 21",
+  "poids": "60",
+  "variables": [
+    {
+      "nom": "note",
+      "valeur": "min(20, max(0, entier(5, 15) + arrondi((qi - 100) / 5)))"
+    }
+  ],
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Rendre votre mémoire",
+      "issues": [
+        {
+          "condition": "note >= 10",
+          "texte": "Diplôme en poche. Encadré, puis rangé dans un tiroir.",
+          "impact": "pose('diplome_sup'); pose('fin_etudes'); scolarise = faux; moral += 10"
+        },
+        {
+          "condition": "note < 10 && age < 24",
+          "texte": "Une année à refaire.",
+          "impact": "moral -= 8; patrimoine -= 300"
+        },
+        {
+          "condition": "note < 10 && age >= 24",
+          "texte": "Vous arrêtez là. Vous aurez appris beaucoup, sauf à aimer les examens.",
+          "impact": "pose('fin_etudes'); scolarise = faux; moral -= 10"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "slug": "installation",
+  "type": "etape",
+  "titre": "Votre couple veut s'installer",
+  "condition": "couple && age >= 18 && !a('installe')",
+  "poids": "8",
+  "options": [
+    {
+      "id": "mariage",
+      "libelle": "Vous vous mariez",
+      "issues": [
+        {
+          "texte": "Une belle fête. Le traiteur aussi s'en souviendra.",
+          "impact": "pose('installe'); pose('marie'); patrimoine -= 5000; social += 8; moral += 8"
+        }
+      ]
+    },
+    {
+      "id": "ensemble",
+      "libelle": "Vous emménagez ensemble",
+      "issues": [
+        {
+          "texte": "Deux brosses à dents, un seul placard.",
+          "impact": "pose('installe'); patrimoine -= 1000; moral += 5"
+        }
+      ]
+    }
+  ]
+}

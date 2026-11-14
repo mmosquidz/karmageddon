@@ -1,0 +1,28 @@
+{
+  "slug": "mentor",
+  "type": "rencontre",
+  "titre": "Une collègue expérimentée vous propose de vous guider",
+  "condition": "emploi && age >= 20 && age <= 40 && !a('mentor')",
+  "poids": "0.7",
+  "options": [
+    {
+      "id": "ecouter",
+      "libelle": "Vous acceptez",
+      "issues": [
+        {
+          "texte": "Elle vous apprend tout ce qui n'est écrit nulle part.",
+          "impact": "pose('mentor'); social += 3"
+        }
+      ]
+    },
+    {
+      "id": "ignorer",
+      "libelle": "Vous préférez apprendre seul",
+      "issues": [
+        {
+          "texte": "Vous referez ses erreurs vous-même."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "slug": "retour-au-travail",
+  "type": "opportunite",
+  "titre": "Votre ancien employeur vous propose de revenir",
+  "condition": "a('au_foyer') && !emploi && !a('retraite') && age < 60",
+  "poids": "1",
+  "options": [
+    {
+      "id": "reprendre",
+      "libelle": "Vous reprenez",
+      "issues": [
+        {
+          "texte": "On vous a gardé une place. Et la plante verte.",
+          "impact": "emploi = vrai; retire('au_foyer'); patrimoine += 500"
+        }
+      ]
+    },
+    {
+      "id": "rester",
+      "libelle": "Vous restez au foyer",
+      "issues": [
+        {
+          "texte": "Vous gardez votre organisation.",
+          "impact": "moral += 2"
+        }
+      ]
+    }
+  ]
+}

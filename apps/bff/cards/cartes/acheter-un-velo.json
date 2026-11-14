@@ -1,0 +1,27 @@
+{
+  "slug": "acheter-un-velo",
+  "type": "choix",
+  "titre": "Acheter un vélo ?",
+  "condition": "age >= 6 && !a('velo')",
+  "options": [
+    {
+      "id": "acheter",
+      "libelle": "Vous l'achetez",
+      "issues": [
+        {
+          "texte": "Il est à vous. Le casque aussi.",
+          "impact": "pose('velo'); patrimoine -= 300; sante += 4"
+        }
+      ]
+    },
+    {
+      "id": "passer",
+      "libelle": "Vous passez votre tour",
+      "issues": [
+        {
+          "texte": "Vous gardez vos économies."
+        }
+      ]
+    }
+  ]
+}

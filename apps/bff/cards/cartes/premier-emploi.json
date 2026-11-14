@@ -1,0 +1,31 @@
+{
+  "slug": "premier-emploi",
+  "type": "epreuve",
+  "titre": "Vous passez votre premier entretien d'embauche",
+  "condition": "a('fin_etudes') && !a('premier_emploi') && !emploi && !a('retraite') && age >= 16",
+  "poids": "40",
+  "variables": [
+    {
+      "nom": "score",
+      "valeur": "entier(1, 100) + (a('diplome_sup') ? 35 : a('bac') ? 20 : a('apprentissage') ? 25 : 0)"
+    }
+  ],
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Serrer la main du recruteur",
+      "issues": [
+        {
+          "condition": "score >= 60",
+          "texte": "Embauché. Vous découvrez la machine à café et ses usages.",
+          "impact": "emploi = vrai; pose('premier_emploi'); moral += 10; patrimoine += 500"
+        },
+        {
+          "condition": "score < 60",
+          "texte": "« Nous gardons votre CV. » Personne ne sait où.",
+          "impact": "moral -= 5"
+        }
+      ]
+    }
+  ]
+}

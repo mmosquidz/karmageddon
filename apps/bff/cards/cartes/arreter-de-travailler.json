@@ -1,0 +1,29 @@
+{
+  "slug": "arreter-de-travailler",
+  "type": "choix",
+  "titre": "Arrêter de travailler pour élever les enfants ?",
+  "condition": "parent && emploi",
+  "unique": true,
+  "options": [
+    {
+      "id": "arreter",
+      "libelle": "Vous arrêtez",
+      "issues": [
+        {
+          "texte": "Vous rendez votre badge.",
+          "impact": "emploi = faux; pose('au_foyer'); moral += 5; social -= 3"
+        }
+      ]
+    },
+    {
+      "id": "continuer",
+      "libelle": "Vous continuez",
+      "issues": [
+        {
+          "texte": "Vous gardez votre poste et vos horaires.",
+          "impact": "moral -= 2"
+        }
+      ]
+    }
+  ]
+}

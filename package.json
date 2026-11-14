@@ -9,9 +9,12 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n bff,game -c blue,magenta \"npm run dev -w @karmageddon/bff\" \"npm run dev -w @karmageddon/game\"",
-    "check": "npm run build -w @karmageddon/contract && npm run check -w @karmageddon/bff && npm run check -w @karmageddon/game",
-    "test": "npm run build -w @karmageddon/contract && npm run test -w @karmageddon/bff && npm run test -w @karmageddon/game",
-    "build": "npm run build -w @karmageddon/contract && npm run build -w @karmageddon/bff && npm run build -w @karmageddon/game",
+    "build:packages": "npm run build -w @karmageddon/contract && npm run build -w @karmageddon/engine",
+    "check": "npm run build:packages && npm run check -w @karmageddon/engine && npm run check -w @karmageddon/bff && npm run check -w @karmageddon/game",
+    "test": "npm run build:packages && npm run test -w @karmageddon/engine && npm run test -w @karmageddon/bff && npm run test -w @karmageddon/game",
+    "build": "npm run build:packages && npm run build -w @karmageddon/bff && npm run build -w @karmageddon/game",
+    "cards:validate": "npm run build:packages && npm run cards:validate -w @karmageddon/bff",
+    "cards:simulate": "npm run build:packages && npm run cards:simulate -w @karmageddon/bff --",
     "tauri": "npm run tauri -w @karmageddon/game"
   },
   "devDependencies": {

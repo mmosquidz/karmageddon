@@ -1,0 +1,34 @@
+{
+  "slug": "premier-amour",
+  "type": "rencontre",
+  "titre": "Quelqu'un vous fait battre le cœur",
+  "condition": "age >= 13 && age <= 19 && !a('premier_amour')",
+  "poids": "3",
+  "unique": true,
+  "options": [
+    {
+      "id": "declarer",
+      "libelle": "Vous vous déclarez",
+      "issues": [
+        {
+          "texte": "C'est réciproque. Vous ne dormez plus.",
+          "impact": "pose('premier_amour'); moral += 10"
+        },
+        {
+          "texte": "« On reste amis ? »",
+          "impact": "moral -= 8"
+        }
+      ]
+    },
+    {
+      "id": "taire",
+      "libelle": "Vous ne dites rien",
+      "issues": [
+        {
+          "texte": "Vous écrivez un poème. Il ne sortira jamais du tiroir.",
+          "impact": "moral -= 2"
+        }
+      ]
+    }
+  ]
+}

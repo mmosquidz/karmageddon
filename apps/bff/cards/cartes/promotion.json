@@ -1,0 +1,29 @@
+{
+  "slug": "promotion",
+  "type": "opportunite",
+  "titre": "On vous propose un poste de responsable",
+  "condition": "emploi && age >= 25 && !a('cadre')",
+  "poids": "a('diplome_sup') ? 1 : 0.5",
+  "options": [
+    {
+      "id": "accepter",
+      "libelle": "Vous acceptez",
+      "issues": [
+        {
+          "texte": "Nouveau titre, nouvelles réunions.",
+          "impact": "pose('cadre'); patrimoine += 3000; moral += 5; social -= 2; sante -= 2"
+        }
+      ]
+    },
+    {
+      "id": "refuser",
+      "libelle": "Vous refusez",
+      "issues": [
+        {
+          "texte": "Vous gardez votre poste et vos soirées.",
+          "impact": "moral += 1"
+        }
+      ]
+    }
+  ]
+}

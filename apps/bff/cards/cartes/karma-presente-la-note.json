@@ -1,0 +1,27 @@
+{
+  "slug": "karma-presente-la-note",
+  "type": "retour_de_baton",
+  "titre": "Le karma présente la note",
+  "condition": "age >= 12 && karma <= 25",
+  "poids": "(35 - karma) / 15",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Payer",
+      "issues": [
+        {
+          "texte": "Vos petits arrangements finissent par se savoir. Le téléphone sonne moins.",
+          "impact": "social -= 5"
+        },
+        {
+          "texte": "Personne ne vous rend le service que vous auriez rendu. Ah, non, justement.",
+          "impact": "patrimoine -= 300; moral -= 2"
+        },
+        {
+          "texte": "Rien ne va de travers, exactement. Rien ne va de votre côté non plus.",
+          "impact": "moral -= 4"
+        }
+      ]
+    }
+  ]
+}

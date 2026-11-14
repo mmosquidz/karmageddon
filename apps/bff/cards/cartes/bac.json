@@ -1,0 +1,36 @@
+{
+  "slug": "bac",
+  "type": "epreuve",
+  "titre": "Vous passez le bac",
+  "condition": "scolarise && a('lycee') && age >= 17 && age <= 20 && !a('bac')",
+  "poids": "60",
+  "variables": [
+    {
+      "nom": "note",
+      "valeur": "min(20, max(0, entier(4, 16) + arrondi((qi - 100) / 5)))"
+    }
+  ],
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Rendre votre copie",
+      "issues": [
+        {
+          "condition": "note >= 16",
+          "texte": "Reçu, mention très bien.",
+          "impact": "pose('bac'); moral += 15; social += 3"
+        },
+        {
+          "condition": "note >= 10 && note < 16",
+          "texte": "Reçu.",
+          "impact": "pose('bac'); moral += 8"
+        },
+        {
+          "condition": "note < 10",
+          "texte": "Recalé. Rendez-vous l'an prochain.",
+          "impact": "moral -= 10"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@karmageddon/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Karmageddon game engine: life state, card scripts, seeded draws. Runs in the BFF only.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.check.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@karmageddon/contract": "0.1.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "vitest": "^3.2.4"
+  }
+}

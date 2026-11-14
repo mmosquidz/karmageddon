@@ -1,0 +1,33 @@
+{
+  "slug": "blessure-de-sport",
+  "type": "retour_de_baton",
+  "titre": "Une douleur à la cheville avant le match",
+  "condition": "a('sportif')",
+  "poids": "0.4",
+  "options": [
+    {
+      "id": "repos",
+      "libelle": "Vous restez sur le banc",
+      "issues": [
+        {
+          "texte": "Vous encouragez les autres. La cheville vous remercie.",
+          "impact": "sante -= 2"
+        }
+      ]
+    },
+    {
+      "id": "jouer",
+      "libelle": "Vous jouez quand même",
+      "issues": [
+        {
+          "texte": "Ça tient. Vous marquez, même.",
+          "impact": "social += 3; sante -= 2"
+        },
+        {
+          "texte": "Ça ne tient pas. Six semaines de béquilles.",
+          "impact": "sante -= 10; moral -= 4"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "slug": "racket-dans-la-cour",
+  "type": "dilemme",
+  "titre": "Dans la cour, des grands rackettent un élève plus jeune",
+  "condition": "scolarise && age >= 10 && age <= 17",
+  "poids": "0.6",
+  "unique": true,
+  "options": [
+    {
+      "id": "intervenir",
+      "libelle": "Vous vous interposez",
+      "issues": [
+        {
+          "poids": "2",
+          "texte": "Ils reculent. Le petit vous suit comme une ombre pendant une semaine.",
+          "impact": "karma += 6; social += 1"
+        },
+        {
+          "poids": "1",
+          "texte": "Ils ne reculent pas. Vous rentrez avec un œil au beurre noir et la tête haute.",
+          "impact": "karma += 6; sante -= 5; moral -= 3"
+        }
+      ]
+    },
+    {
+      "id": "regarder",
+      "libelle": "Vous regardez ailleurs",
+      "issues": [
+        {
+          "texte": "Ce n'est pas votre affaire. Vous y repensez le soir.",
+          "impact": "karma -= 4; moral -= 2"
+        }
+      ]
+    }
+  ]
+}
