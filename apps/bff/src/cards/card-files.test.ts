@@ -20,7 +20,7 @@ import { describeRejection, loadDeck } from "./deck.js";
 const life = lifeResponseSchema.parse(
   JSON.parse(readFileSync(fileURLToPath(new URL("../../fixtures/life.json", import.meta.url)), "utf8")),
 );
-const newborn = initialState(toBirthCard(life));
+const newborn = initialState(toBirthCard(life, "middle"));
 const deck = checkCardFiles();
 
 function at(changes: Partial<LifeState>): LifeState {
@@ -71,12 +71,15 @@ describe("the cards of the repository", () => {
   test("a draw follows the age and the situation", () => {
     const toddler = slugs(at({ age: 1 }));
     expect(toddler).toContain("premiers-pas");
-    expect(toddler).not.toContain("rentree-des-classes");
+    expect(toddler).not.toContain("scolarisation");
 
     const child = slugs(at({ age: 9, marques: ["ecole"], scolarise: true }));
-    expect(child).toEqual(expect.arrayContaining(["acheter-un-velo", "bras-casse", "ami-d-enfance", "varicelle"]));
+    expect(child).toEqual(
+      expect.arrayContaining(["acheter-un-velo", "bras-casse", "ami-d-enfance", "varicelle", "jambe-cassee", "forte-fievre"]),
+    );
     expect(child).not.toContain("loterie");
-    expect(child).not.toContain("rentree-des-classes");
+    expect(child).not.toContain("scolarisation");
+    expect(child).not.toContain("ecole-privee-ou-publique");
 
     const student = slugs(at({ age: 18, scolarise: true, marques: ["ecole", "lycee", "orientation"] }));
     expect(student).toEqual(expect.arrayContaining(["bac", "loterie", "acheter-une-voiture", "triche-a-l-examen"]));
@@ -148,13 +151,65 @@ describe("the cards of the repository", () => {
     expect(slugs(at({ age: 17 }), true)).not.toContain(card.slug);
   });
 
-  test("the bac draws a mark from 0 to 20 that leans on the IQ", () => {
+  test("school starts with a draw, except in a rich country where the player picks private or public", () => {
+    const schoolCards = (changes: Partial<LifeState>) =>
+      slugs(at({ age: 6, ...changes })).filter((slug) => slug === "scolarisation" || slug === "ecole-privee-ou-publique");
+    expect(schoolCards({ revenuPays: "faible" })).toEqual(["scolarisation"]);
+    expect(schoolCards({ revenuPays: "intermediaire" })).toEqual(["scolarisation"]);
+    expect(schoolCards({ revenuPays: null })).toEqual(["scolarisation"]);
+    expect(schoolCards({ revenuPays: "eleve" })).toEqual(["ecole-privee-ou-publique"]);
+    expect(schoolCards({ revenuPays: "eleve", age: 5 })).toEqual([]);
+    expect(schoolCards({ marques: ["ecole"], scolarise: true })).toEqual([]);
+    expect(schoolCards({ marques: ["pas_d_ecole"], age: 11 })).toEqual([]);
+
+    const card = cardNamed("scolarisation");
+    function schooled(changes: Partial<LifeState>): number {
+      let count = 0;
+      for (let seed = 0; seed < 400; seed += 1) {
+        const { state } = resolveCard(card, "suite", at({ age: 7, ...changes }), seededRng(`ecole/${seed}`));
+        count += state.scolarise ? 1 : 0;
+      }
+      return count / 400;
+    }
+    expect(schooled({ revenuPays: "faible", karma: 10 })).toBeLessThan(schooled({ revenuPays: "faible", karma: 90 }));
+    expect(schooled({ revenuPays: "faible" })).toBeLessThan(schooled({ revenuPays: "intermediaire" }));
+    expect(schooled({ revenuPays: "faible", karma: 0, rangParents: 1 })).toBeGreaterThan(0);
+
+    const lastChance = resolveCard(card, "suite", at({ age: 10, revenuPays: "faible", karma: 0 }), seededRng("ecole/derniere"));
+    expect(lastChance.state.scolarise || lastChance.state.marques.includes("pas_d_ecole")).toBe(true);
+    if (!lastChance.state.scolarise) {
+      expect(lastChance.state.marques).toContain("fin_etudes");
+    }
+
+    const choice = cardNamed("ecole-privee-ou-publique");
+    const rich = at({ age: 6, revenuPays: "eleve", rangParents: 90 });
+    const privee = resolveCard(choice, "privee", rich, seededRng("privee")).state;
+    expect(privee).toMatchObject({ scolarise: true, education: 5 });
+    expect(privee.marques).toEqual(expect.arrayContaining(["ecole", "ecole_privee"]));
+    const full = resolveCard(choice, "privee", { ...rich, rangParents: null }, seededRng("privee")).state;
+    expect(full.scolarise).toBe(true);
+    expect(full.marques).not.toContain("ecole_privee");
+    expect(resolveCard(choice, "publique", rich, seededRng("publique")).state).toMatchObject({ scolarise: true, education: 0 });
+  });
+
+  test("an illness or an accident costs a little education, only during school", () => {
+    for (const slug of ["grippe", "varicelle", "bras-casse", "jambe-cassee", "forte-fievre"]) {
+      const card = cardNamed(slug);
+      const pupil = at({ age: 8, scolarise: true, education: 20 });
+      const lost = 20 - resolveCard(card, "suite", pupil, seededRng(slug)).state.education;
+      expect(lost, slug).toBeGreaterThan(0);
+      expect(lost, slug).toBeLessThanOrEqual(3);
+      expect(resolveCard(card, "suite", { ...pupil, scolarise: false }, seededRng(slug)).state.education, slug).toBe(20);
+    }
+  });
+
+  test("the bac draws a mark from 0 to 20 that leans on the IQ and on education", () => {
     const card = cardNamed("bac");
     const outcomes = new Set<number>();
-    function passes(qi: number): number {
+    function passes(qi: number, education = 50): number {
       let passed = 0;
       for (let seed = 0; seed < 400; seed += 1) {
-        const student = at({ age: 18, scolarise: true, qi, marques: ["lycee"] });
+        const student = at({ age: 18, scolarise: true, qi, education, marques: ["lycee"] });
         const { variables, state, issue } = resolveCard(card, "suite", student, seededRng(`bac/${seed}`));
         const note = variables.note as number;
         expect(Number.isInteger(note)).toBe(true);
@@ -173,10 +228,45 @@ describe("the cards of the repository", () => {
     expect(low).toBeLessThan(middle);
     expect(middle).toBeLessThan(high);
     expect(high).toBe(1);
+    expect(passes(100, 10)).toBeLessThan(middle);
+    expect(passes(100, 90)).toBeGreaterThan(middle);
     expect([...outcomes].sort()).toEqual([0, 1, 2]);
     // Once passed, the card is not drawn again.
     expect(slugs(at({ age: 18, scolarise: true, marques: ["lycee"] }))).toContain("bac");
     expect(slugs(at({ age: 18, scolarise: true, marques: ["bac", "lycee"] }))).not.toContain("bac");
+  });
+
+  test("a declaration is a die that leans on morale, IQ, social life, health and karma", () => {
+    const card = cardNamed("premier-amour");
+    const teen = { age: 16, scolarise: true };
+    function rate(changes: Partial<LifeState>): number {
+      let loved = 0;
+      for (let seed = 0; seed < 200; seed += 1) {
+        const { draw, issue, state } = resolveCard(card, "declarer", at({ ...teen, ...changes }), seededRng(`amour/${seed}`));
+        expect(draw?.faces).toBe(20);
+        expect(draw?.target).toBe(12);
+        expect(draw?.modifiers.map((modifier) => modifier.label)).toEqual(["Moral", "QI", "Social", "Santé", "Karma"]);
+        const bonus = draw?.modifiers.reduce((sum, modifier) => sum + modifier.value, 0) ?? 0;
+        expect(draw?.total).toBe((draw?.roll ?? 0) + bonus);
+        expect(issue.index).toBe((draw?.total ?? 0) >= 12 ? 0 : 1);
+        expect(state.marques.includes("premier_amour")).toBe(issue.index === 0);
+        loved += issue.index === 0 ? 1 : 0;
+      }
+      return loved / 200;
+    }
+    const ordinary = rate({});
+    const bright = rate({ moral: 100, qi: 140, social: 100, sante: 100, karma: 100 });
+    const bleak = rate({ moral: 0, qi: 70, social: 0, sante: 0, karma: 0 });
+    expect(ordinary).toBeGreaterThan(0.3);
+    expect(ordinary).toBeLessThan(0.7);
+    expect(bright).toBeGreaterThan(ordinary);
+    expect(bleak).toBeLessThan(ordinary);
+    expect(bright).toBeGreaterThan(0.8);
+    expect(bleak).toBeLessThan(0.2);
+
+    const quiet = resolveCard(card, "taire", at(teen), seededRng("taire"));
+    expect(quiet.draw).toBeNull();
+    expect(quiet.issue.texte).toBe("Vous écrivez un poème. Il ne sortira jamais du tiroir.");
   });
 
   test("the game state built from a whole Stochia life holds nothing after birth", () => {
@@ -184,6 +274,7 @@ describe("the cards of the repository", () => {
       [
         "age",
         "couple",
+        "education",
         "emploi",
         "enfants",
         "historique",
@@ -196,13 +287,23 @@ describe("the cards of the repository", () => {
         "petitsEnfants",
         "qi",
         "rangParents",
+        "revenuPays",
         "sante",
         "scolarise",
         "sexe",
         "social",
       ].sort(),
     );
-    expect(newborn).toMatchObject({ sexe: "homme", pays: "ID", milieu: "urbain", qi: 77, rangParents: 60, age: 0 });
+    expect(newborn).toMatchObject({
+      sexe: "homme",
+      pays: "ID",
+      milieu: "urbain",
+      qi: 77,
+      rangParents: 60,
+      revenuPays: "intermediaire",
+      age: 0,
+      education: 0,
+    });
     const encoded = JSON.stringify(newborn);
     for (const future of ["2102", "2075", "2066", "died", "heat_dome", "career", "inheritance", "19180", "92"]) {
       expect(encoded).not.toContain(future);

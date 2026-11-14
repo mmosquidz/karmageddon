@@ -1,0 +1,40 @@
+{
+  "slug": "scolarisation",
+  "type": "etape",
+  "titre": "Vos parents décident si vous irez à l'école cette année",
+  "condition": "age >= 6 && !a('ecole') && !a('pas_d_ecole') && !(revenuPaysConnu && revenuPays == 'eleve')",
+  "poids": "60",
+  "variables": [
+    {
+      "nom": "seuil",
+      "valeur": "min(0.95, max(0.1, (!revenuPaysConnu ? 0.7 : revenuPays == 'faible' ? 0.4 : 0.85) + (karma - 50) / 100 + (rangParentsConnu ? (rangParents - 50) / 500 : 0)))"
+    },
+    {
+      "nom": "tirage",
+      "valeur": "hasard()"
+    }
+  ],
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Attendre leur décision",
+      "issues": [
+        {
+          "condition": "tirage < seuil",
+          "texte": "Un cartable, une ardoise et une place au premier rang : vous allez à l'école.",
+          "impact": "scolarise = vrai; pose('ecole'); social += 3"
+        },
+        {
+          "condition": "tirage >= seuil && age < 10",
+          "texte": "Pas d'école cette année. On verra à la prochaine rentrée.",
+          "impact": "moral -= 2"
+        },
+        {
+          "condition": "tirage >= seuil && age >= 10",
+          "texte": "L'école ne viendra pas. Vous apprendrez autrement, sur le tas.",
+          "impact": "pose('pas_d_ecole'); pose('fin_etudes'); moral -= 3"
+        }
+      ]
+    }
+  ]
+}

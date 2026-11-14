@@ -18,6 +18,7 @@ const config: Config = {
   allowedOrigins: ["http://localhost:1420", "https://tauri.localhost"],
   timeoutMs: 25_000,
   retryDelayMs: 0,
+  economyTimeoutMs: 5_000,
 };
 
 function noLives(): Lives {
@@ -31,6 +32,26 @@ function jsonResponse(body: unknown, status = 200, headers: HeadersInit = {}): R
   });
 }
 
+/** `/api/economy` without projections: 2026 is not projected, 2024 is the last observed year. */
+const economyAnswers: typeof fetch = async (input) => {
+  const year = Number(new URL(String(input)).searchParams.get("from"));
+  if (year > 2024) {
+    return jsonResponse({ error: "not projected" }, 503);
+  }
+  return jsonResponse({
+    country: { code: "ID", last_observed_year: 2024, national_source: "secret_national_source" },
+    years: [{ year, population: 1, gdp: 1, gdp_per_capita: 14321.5, lineage: "secret_lineage" }],
+    limits: ["secret_limit"],
+  });
+};
+
+/** Sends `/api/economy` to `economy` and every other request, the life, to `life`. */
+function upstream(life: typeof fetch, economy: typeof fetch = economyAnswers): typeof fetch {
+  return (input, init) => (String(input).includes("/api/economy") ? economy(input, init) : life(input, init));
+}
+
+const fixtureUpstream = upstream(async () => jsonResponse(fixture));
+
 describe("POST /api/births", () => {
   test("returns a birth card and a life to play, and asks Stochia for a default life", async () => {
     const bodies: string[] = [];
@@ -38,10 +59,10 @@ describe("POST /api/births", () => {
     const app = createApp({
       config,
       lives,
-      fetchImpl: async (_input, init) => {
+      fetchImpl: upstream(async (_input, init) => {
         bodies.push(String(init?.body));
         return jsonResponse(fixture);
-      },
+      }),
     });
 
     const response = await app.request("/api/births", { method: "POST" });
@@ -52,8 +73,70 @@ describe("POST /api/births", () => {
     expect(Object.keys(body).sort()).toEqual(["birth", "lifeId"]);
     const parsed = birthResponseSchema.parse(body);
     expect(parsed.birth.identity.firstName).toBe("Muhammad Al Fatih");
+    expect(parsed.birth.context.countryIncome).toBe("middle");
     expect(JSON.stringify(body)).not.toContain("death");
     expect(lives.size).toBe(1);
+  });
+
+  test("gives the country's income level, never its GDP figure or any other economy field", async () => {
+    const app = createApp({ config, lives: noLives(), fetchImpl: fixtureUpstream });
+    const raw = await (await app.request("/api/births", { method: "POST" })).text();
+    expect(Object.keys(JSON.parse(raw).birth.context).sort()).toEqual([
+      "countryIncome",
+      "lifeExpectancyAtBirth",
+      "parentsWealthPercentile",
+      "totalFertility",
+    ]);
+    for (const hidden of ["14321", "gdp", "last_observed", "secret_"]) {
+      expect(raw, hidden).not.toContain(hidden);
+    }
+  });
+
+  test("keeps the birth when the economy cannot be read, with an unknown income", async () => {
+    const failures: Record<string, typeof fetch> = {
+      error: async () => jsonResponse({ error: "boom" }, 500),
+      network: async () => {
+        throw new TypeError("network");
+      },
+      invalid: async () => jsonResponse({ country: "?" }),
+      rateLimited: async () => jsonResponse({ error: "too many" }, 429, { "retry-after": "12" }),
+      timeout: (_input, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+        }),
+    };
+    for (const [name, economy] of Object.entries(failures)) {
+      const lives = noLives();
+      const app = createApp({
+        config: { ...config, economyTimeoutMs: 20 },
+        lives,
+        fetchImpl: upstream(async () => jsonResponse(fixture), economy),
+      });
+      const response = await app.request("/api/births", { method: "POST" });
+      expect(response.status, name).toBe(200);
+      expect(response.headers.get("retry-after"), name).toBeNull();
+      expect(birthResponseSchema.parse(await response.json()).birth.context.countryIncome, name).toBeNull();
+      expect(lives.size, name).toBe(1);
+    }
+  });
+
+  test("asks the economy of a country once, not at every birth", async () => {
+    let economyCalls = 0;
+    const app = createApp({
+      config,
+      lives: noLives(),
+      fetchImpl: upstream(
+        async () => jsonResponse(fixture),
+        (input, init) => {
+          economyCalls += 1;
+          return economyAnswers(input, init);
+        },
+      ),
+    });
+    for (let birth = 0; birth < 3; birth += 1) {
+      expect((await app.request("/api/births", { method: "POST" })).status).toBe(200);
+    }
+    expect(economyCalls).toBe(3);
   });
 
   test("starts no life when the birth fails", async () => {
@@ -69,13 +152,13 @@ describe("POST /api/births", () => {
     const app = createApp({
       config,
       lives: noLives(),
-      fetchImpl: async () => {
+      fetchImpl: upstream(async () => {
         calls += 1;
         if (calls === 1) {
           return jsonResponse({ error: "unavailable" }, 503);
         }
         return jsonResponse(fixture);
-      },
+      }),
     });
 
     const response = await app.request("/api/births", { method: "POST" });
@@ -151,7 +234,7 @@ describe("POST /api/births", () => {
 
 describe("CORS and health", () => {
   test("allows the local game and the Tauri origin", async () => {
-    const app = createApp({ config, lives: noLives(), fetchImpl: async () => jsonResponse(fixture) });
+    const app = createApp({ config, lives: noLives(), fetchImpl: fixtureUpstream });
     const allowed = await app.request("/api/births", {
       method: "POST",
       headers: { origin: "http://localhost:1420" },
@@ -166,7 +249,7 @@ describe("CORS and health", () => {
   });
 
   test("does not allow an unknown origin", async () => {
-    const app = createApp({ config, lives: noLives(), fetchImpl: async () => jsonResponse(fixture) });
+    const app = createApp({ config, lives: noLives(), fetchImpl: fixtureUpstream });
     const response = await app.request("/health", {
       headers: { origin: "https://evil.example" },
     });
@@ -174,7 +257,7 @@ describe("CORS and health", () => {
   });
 
   test("lets the game send a choice from another origin", async () => {
-    const app = createApp({ config, lives: noLives(), fetchImpl: async () => jsonResponse(fixture) });
+    const app = createApp({ config, lives: noLives(), fetchImpl: fixtureUpstream });
     const preflight = await app.request("/api/lives/abcdefghijklmnop/choice", {
       method: "OPTIONS",
       headers: {
@@ -215,6 +298,49 @@ const TEST_CARDS = [
     condition: "age == 3",
     poids: "1000",
     options: [{ id: "suite", libelle: "Suite", issues: [{ condition: "faux", texte: "Jamais.", impact: "" }] }],
+  },
+  {
+    slug: "declaration",
+    type: "chance",
+    titre: "Un regard",
+    condition: "age == 2",
+    poids: "1000",
+    options: [
+      {
+        id: "oser",
+        libelle: "Oser",
+        tirage: {
+          de: 20,
+          modificateurs: [{ libelle: "Moral", valeur: "arrondi((moral - 50) / 25)" }],
+          seuil: 12,
+          relance: 10,
+        },
+        issues: [
+          { condition: "jet >= 12", texte: "C'est réciproque.", impact: "moral += 10" },
+          { condition: "jet < 12", texte: "On reste amis.", impact: "moral -= 8" },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "hors-de-prix",
+    type: "chance",
+    titre: "Un second regard",
+    condition: "age == 4",
+    poids: "1000",
+    options: [
+      {
+        id: "oser",
+        libelle: "Oser",
+        tirage: {
+          de: 6,
+          modificateurs: [{ libelle: "Moral", valeur: "0" }],
+          seuil: 1,
+          relance: 80,
+        },
+        issues: [{ condition: "jet >= 1", texte: "Toujours.", impact: "moral += 1" }],
+      },
+    ],
   },
 ];
 
@@ -284,18 +410,28 @@ const ALLOWED_KEYS = [
   "social",
   "morale",
   "karma",
+  "education",
   "wealth",
   "inSchool",
   "employed",
   "inCouple",
   "children",
   "grandchildren",
+  "draw",
+  "faces",
+  "roll",
+  "modifiers",
+  "value",
+  "total",
+  "target",
+  "reroll",
+  "cost",
 ];
 
 describe("playing a life", () => {
   test("shows a card without its scripts or outcomes, then only the outcome drawn", async () => {
     const { lives } = testLives();
-    const app = createApp({ config, lives, fetchImpl: async () => jsonResponse(fixture) });
+    const app = createApp({ config, lives, fetchImpl: fixtureUpstream });
     const id = await born(app);
 
     const response = await post(app, `/api/lives/${id}/next`);
@@ -310,6 +446,7 @@ describe("playing a life", () => {
         social: 50,
         morale: 50,
         karma: 50,
+        education: 0,
         wealth: 0,
         inSchool: false,
         employed: false,
@@ -352,7 +489,7 @@ describe("playing a life", () => {
 
   test("refuses an unknown life, a malformed body or a choice that is not on the card", async () => {
     const { lives } = testLives();
-    const app = createApp({ config, lives, fetchImpl: async () => jsonResponse(fixture) });
+    const app = createApp({ config, lives, fetchImpl: fixtureUpstream });
     const id = await born(app);
 
     for (const path of ["/api/lives/inconnue-mais-assez-longue/next", "/api/lives/court/next"]) {
@@ -380,7 +517,7 @@ describe("playing a life", () => {
 
   test("drops a card that fails to resolve, logs it, and lets the life go on", async () => {
     const { lives, logged } = testLives();
-    const app = createApp({ config, lives, fetchImpl: async () => jsonResponse(fixture) });
+    const app = createApp({ config, lives, fetchImpl: fixtureUpstream });
     const id = await born(app);
     let turn: Turn = turnSchema.parse(await (await post(app, `/api/lives/${id}/next`)).json());
     while (turn.kind === "card" && turn.status.age < 3) {
@@ -404,11 +541,16 @@ describe("playing a life", () => {
     const deck = checkCardFiles();
     expect(deck.rejected).toEqual([]);
     const lives = new Lives({ cards: deck.cards, types: deck.types, randomText: counterText(), log: () => undefined });
-    const app = createApp({ config, lives, fetchImpl: async () => jsonResponse(fixture) });
+    const app = createApp({ config, lives, fetchImpl: fixtureUpstream });
     const id = await born(app);
 
     const hiddenTexts = deck.cards.flatMap((card) => card.options.flatMap((option) => option.issues.map((issue) => issue.texte)));
-    const scripts = deck.cards.flatMap((card) => [card.condition.source, card.poids.source]).filter((source) => source.length > 6);
+    const formulas = deck.cards.flatMap((card) =>
+      card.options.flatMap((option) => option.tirage?.modificateurs.map((modifier) => modifier.valeur.source) ?? []),
+    );
+    const scripts = [...deck.cards.flatMap((card) => [card.condition.source, card.poids.source]), ...formulas].filter(
+      (source) => source.length > 6,
+    );
     let lastAge = 0;
     let cards = 0;
     for (;;) {
@@ -433,11 +575,75 @@ describe("playing a life", () => {
       for (const key of keysOf(JSON.parse(outcomeRaw))) {
         expect(ALLOWED_KEYS, key).toContain(key);
       }
+      for (const hidden of scripts) {
+        expect(outcomeRaw, hidden).not.toContain(JSON.stringify(hidden).slice(1, -1));
+      }
     }
     expect(lastAge).toBe(85);
     expect(cards).toBeGreaterThan(40);
     expect(turnSchema.parse(await (await post(app, `/api/lives/${id}/next`)).json()).kind).toBe("end");
     expect((await post(app, `/api/lives/${id}/choice`, JSON.stringify({ choice: "suite" }))).status).toBe(409);
+  });
+
+  test("shows a die without its formula, and sells one reroll", async () => {
+    const { lives } = testLives();
+    const app = createApp({ config, lives, fetchImpl: fixtureUpstream });
+    const id = await born(app);
+
+    await post(app, `/api/lives/${id}/next`);
+    await post(app, `/api/lives/${id}/choice`, JSON.stringify({ choice: "rendre" }));
+    const shown = await (await post(app, `/api/lives/${id}/next`)).text();
+    expect(shown).not.toContain("arrondi");
+    expect(shown).not.toContain("C'est réciproque.");
+    expect(shown).not.toContain("On reste amis.");
+    expect((await post(app, `/api/lives/${id}/reroll`)).status).toBe(409);
+
+    const chosen = await post(app, `/api/lives/${id}/choice`, JSON.stringify({ choice: "oser" }));
+    const raw = await chosen.text();
+    const outcome = outcomeSchema.parse(JSON.parse(raw));
+    const draw = outcome.draw;
+    expect(draw?.faces).toBe(20);
+    expect(draw?.target).toBe(12);
+    expect(draw?.modifiers).toEqual([{ label: "Moral", value: 0 }]);
+    expect(draw?.total).toBe(draw?.roll);
+    expect(outcome.reroll).toEqual({ cost: 10 });
+    expect(outcome.status.karma).toBe(50);
+    expect([60, 42]).toContain(outcome.status.morale);
+    const kept = outcome.text === "C'est réciproque.";
+    expect(raw.includes("C'est réciproque.")).toBe(kept);
+    expect(raw.includes("On reste amis.")).toBe(!kept);
+    expect(raw).not.toContain("arrondi");
+    expect(raw).not.toContain("jet");
+
+    const again = outcomeSchema.parse(await (await post(app, `/api/lives/${id}/reroll`)).json());
+    expect(again.reroll).toBeUndefined();
+    expect(again.status.karma).toBe(40);
+    expect([60, 42]).toContain(again.status.morale);
+    expect(again.draw?.faces).toBe(20);
+    expect((await post(app, `/api/lives/${id}/reroll`)).status).toBe(409);
+
+    const moved = await post(app, `/api/lives/${id}/next`);
+    expect(moved.status).toBe(200);
+    expect((await post(app, `/api/lives/${id}/reroll`)).status).toBe(409);
+  });
+
+  test("does not offer a reroll the karma cannot pay", async () => {
+    const app = createApp({ config, lives: testLives().lives, fetchImpl: fixtureUpstream });
+    const id = await born(app);
+    let turn: Turn = turnSchema.parse(await (await post(app, `/api/lives/${id}/next`)).json());
+    while (turn.kind === "card" && turn.status.age < 4) {
+      await post(app, `/api/lives/${id}/choice`, JSON.stringify({ choice: turn.card.choices[0]!.id }));
+      turn = turnSchema.parse(await (await post(app, `/api/lives/${id}/next`)).json());
+    }
+    expect(turn).toMatchObject({ kind: "card", status: { age: 4 }, card: { title: "Un second regard" } });
+    const outcome = outcomeSchema.parse(
+      await (await post(app, `/api/lives/${id}/choice`, JSON.stringify({ choice: "oser" }))).json(),
+    );
+    expect(outcome.draw?.faces).toBe(6);
+    expect(outcome.reroll).toBeUndefined();
+    expect(outcome.text).toBe("Toujours.");
+    expect((await post(app, `/api/lives/${id}/reroll`)).status).toBe(409);
+    expect((await post(app, "/api/lives/inconnue-mais-assez-longue/reroll")).status).toBe(404);
   });
 });
 
@@ -454,11 +660,11 @@ describe("the lives kept in memory", () => {
     },
     family: {
       habitat: "rural",
-      mother: { firstName: null, ageAtBirth: 30, birthCountryCode: "FR", work: null, diedBeforeBirth: false },
-      father: { firstName: null, ageAtBirth: 30, birthCountryCode: "FR", work: null, diedBeforeBirth: false },
+      mother: { firstName: null, ageAtBirth: 30, birthCountryCode: "FR", work: null, diedBeforeBirth: false, iq: 100 },
+      father: { firstName: null, ageAtBirth: 30, birthCountryCode: "FR", work: null, diedBeforeBirth: false, iq: 100 },
     },
     elderSiblings: [],
-    context: { lifeExpectancyAtBirth: 80, totalFertility: 1.8, parentsWealthPercentile: null },
+    context: { lifeExpectancyAtBirth: 80, totalFertility: 1.8, parentsWealthPercentile: null, countryIncome: "high" },
     record: { seed: "1", modelVersion: "v", dataSource: "WPP" },
   });
 

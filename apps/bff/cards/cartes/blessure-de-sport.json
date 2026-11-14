@@ -25,7 +25,7 @@
         },
         {
           "texte": "Ça ne tient pas. Six semaines de béquilles.",
-          "impact": "sante -= 10; moral -= 4"
+          "impact": "sante -= 10; moral -= 4; education -= scolarise ? 2 : 0"
         }
       ]
     }

@@ -10,12 +10,21 @@ import { SIMULATION_LAST_AGE, simulateLife, type SimulatedYear } from "./simulat
 const life = lifeResponseSchema.parse(
   JSON.parse(readFileSync(fileURLToPath(new URL("../../fixtures/life.json", import.meta.url)), "utf8")),
 );
-const newborn = initialState(toBirthCard(life));
+const newborn = initialState(toBirthCard(life, "middle"));
 const deck = checkCardFiles();
 
+/** The countries a simulated life is born in: every income level, and a rich one without a known rank. */
+const COUNTRIES: Pick<LifeState, "revenuPays" | "rangParents">[] = [
+  { revenuPays: "faible", rangParents: 30 },
+  { revenuPays: "intermediaire", rangParents: 60 },
+  { revenuPays: "eleve", rangParents: 75 },
+  { revenuPays: "eleve", rangParents: null },
+  { revenuPays: null, rangParents: 60 },
+];
+
 const LIVES = 300;
-const BIRTHS: LifeState[] = [77, 100, 125].flatMap((qi) =>
-  (["femme", "homme"] as const).map((sexe) => ({ ...newborn, qi, sexe })),
+const BIRTHS: LifeState[] = COUNTRIES.flatMap((country) =>
+  [77, 100, 125].flatMap((qi) => (["femme", "homme"] as const).map((sexe) => ({ ...newborn, ...country, qi, sexe }))),
 );
 
 type Life = { seed: string; state: LifeState; years: SimulatedYear[] };
@@ -94,8 +103,42 @@ describe("simulated lives on the base deck", () => {
     }
   });
 
+  test("send most children to school, all of them in a rich country", () => {
+    const born = (lived: Life) => BIRTHS[Number(lived.seed.split("/")[1]) % BIRTHS.length]!;
+    const inCountry = (revenu: LifeState["revenuPays"]) => lives.filter((lived) => born(lived).revenuPays === revenu);
+    const shareOf = (group: Life[], predicate: (lived: Life) => boolean) => group.filter(predicate).length / group.length;
+    const neverSchooled = (lived: Life) => lived.state.marques.includes("pas_d_ecole");
+
+    const rich = inCountry("eleve");
+    expect(rich.length).toBeGreaterThan(50);
+    expect(shareOf(rich, (lived) => (firstAge(lived, "ecole-privee-ou-publique") ?? Infinity) <= 7)).toBeGreaterThan(0.95);
+    expect(rich.some((lived) => firstAge(lived, "scolarisation") !== undefined)).toBe(false);
+    expect(shareOf(rich, neverSchooled)).toBe(0);
+
+    const poor = inCountry("faible");
+    expect(shareOf(poor, neverSchooled)).toBeGreaterThan(0);
+    expect(shareOf(poor, neverSchooled)).toBeLessThan(0.3);
+    expect(shareOf(poor, neverSchooled)).toBeGreaterThan(shareOf(inCountry("intermediaire"), neverSchooled));
+    expect(poor.some((lived) => firstAge(lived, "ecole-privee-ou-publique") !== undefined)).toBe(false);
+
+    for (const lived of lives) {
+      const school = firstAge(lived, "scolarisation") ?? firstAge(lived, "ecole-privee-ou-publique");
+      expect(school, lived.seed).toBeGreaterThanOrEqual(6);
+      expect(lived.state.marques.includes("ecole") || neverSchooled(lived), lived.seed).toBe(true);
+    }
+  });
+
+  test("give more education to a higher IQ, and none to a child who never went to school", () => {
+    const born = (lived: Life) => BIRTHS[Number(lived.seed.split("/")[1]) % BIRTHS.length]!;
+    const education = (qi: number) => median(lives.filter((lived) => born(lived).qi === qi).map((lived) => lived.state.education));
+    expect(education(77)).toBeLessThan(education(100));
+    expect(education(100)).toBeLessThan(education(125));
+    for (const lived of lives.filter((candidate) => candidate.state.marques.includes("pas_d_ecole"))) {
+      expect(lived.state.education, lived.seed).toBe(0);
+    }
+  });
+
   test("follow the calendar of a life in most cases", () => {
-    expect(share((lived) => (firstAge(lived, "rentree-des-classes") ?? Infinity) <= 8)).toBeGreaterThan(0.95);
     expect(share((lived) => (firstAge(lived, "orientation") ?? Infinity) <= 18)).toBeGreaterThan(0.9);
     expect(share((lived) => lived.state.marques.includes("premier_emploi"))).toBeGreaterThan(0.9);
     expect(share((lived) => (firstAge(lived, "premier-emploi") ?? Infinity) <= 30)).toBeGreaterThan(0.8);
@@ -103,11 +146,7 @@ describe("simulated lives on the base deck", () => {
     expect(share((lived) => lived.years.some((year) => year.carte === "installation"))).toBeGreaterThan(0.3);
     expect(share((lived) => lived.state.enfants > 0)).toBeGreaterThan(0.2);
     for (const lived of lives) {
-      const school = firstAge(lived, "rentree-des-classes");
       const retirement = firstAge(lived, "retraite");
-      if (school !== undefined) {
-        expect(school, lived.seed).toBeGreaterThanOrEqual(6);
-      }
       if (retirement !== undefined) {
         expect(retirement, lived.seed).toBeGreaterThanOrEqual(62);
       }

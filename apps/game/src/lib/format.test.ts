@@ -10,6 +10,8 @@ import {
   formatFertility,
   formatLifeExpectancy,
   formatPlace,
+  householdSentence,
+  mapPoint,
   sexWord,
 } from "./format.js";
 import type { BirthCard } from "@karmageddon/contract";
@@ -46,4 +48,79 @@ describe("format", () => {
     expect(formatAgeAtBirth(1)).toBe("1 an");
     expect(formatCoordinates(-8.55, 116.63)).toBe("8,55° S · 116,63° E");
   });
+
+  test("places a birth on a 360 by 180 world map", () => {
+    expect(mapPoint(0, 0)).toEqual({ x: 180, y: 90 });
+    expect(mapPoint(35.7, 139.7).x).toBeCloseTo(319.7, 1);
+    expect(mapPoint(35.7, 139.7).y).toBeCloseTo(54.3, 1);
+    expect(mapPoint(95, -190)).toEqual({ x: 0, y: 0 });
+  });
+
+  test("names who is alive in the household at birth", () => {
+    expect(householdSentence(household())).toBe("Père, mère et vous.");
+    expect(householdSentence(household({ siblings: [{ sex: "female" }] }))).toBe("Père, mère, vous et une sœur.");
+    expect(
+      householdSentence(household({ siblings: [{ sex: "female" }, { sex: "female" }, { sex: "male" }] })),
+    ).toBe("Père, mère, vous, 2 sœurs et un frère.");
+    expect(householdSentence(household({ fatherDead: true, siblings: [{ sex: "male" }] }))).toBe(
+      "Mère, vous et un frère.",
+    );
+    expect(
+      householdSentence(household({ fatherDead: true, motherDead: true, siblings: [{ sex: "female", died: true }] })),
+    ).toBe("Vous.");
+    expect(householdSentence(household({ fatherDead: true, motherDead: true, siblings: [{ sex: "female" }] }))).toBe(
+      "Vous et une sœur.",
+    );
+  });
 });
+
+function household(options: {
+  fatherDead?: boolean;
+  motherDead?: boolean;
+  siblings?: { sex: "female" | "male"; died?: boolean }[];
+} = {}): BirthCard {
+  return {
+    identity: { firstName: "Ada", sex: "female", birthDate: "2026-11-14", iq: 100 },
+    place: {
+      city: null,
+      countryCode: "FR",
+      countryNameFallback: "France",
+      settlement: "urban_centre",
+      latitude: 0,
+      longitude: 0,
+    },
+    family: {
+      habitat: "urban",
+      mother: {
+        firstName: "A",
+        ageAtBirth: 30,
+        birthCountryCode: "FR",
+        work: null,
+        diedBeforeBirth: options.motherDead ?? false,
+        iq: 100,
+      },
+      father: {
+        firstName: "B",
+        ageAtBirth: 30,
+        birthCountryCode: "FR",
+        work: null,
+        diedBeforeBirth: options.fatherDead ?? false,
+        iq: 100,
+      },
+    },
+    elderSiblings: (options.siblings ?? []).map((sibling, index) => ({
+      firstName: "S",
+      sex: sibling.sex,
+      birthDate: `2010-01-${String(index + 1).padStart(2, "0")}`,
+      diedBeforeBirth: sibling.died ?? false,
+      iq: 100,
+    })),
+    context: {
+      lifeExpectancyAtBirth: 80,
+      totalFertility: 1.8,
+      parentsWealthPercentile: 60,
+      countryIncome: "high",
+    },
+    record: { seed: "1", modelVersion: "v", dataSource: "WPP" },
+  };
+}

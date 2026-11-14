@@ -9,12 +9,26 @@
     {
       "id": "declarer",
       "libelle": "Vous vous déclarez",
+      "tirage": {
+        "de": 20,
+        "modificateurs": [
+          { "libelle": "Moral", "valeur": "arrondi((moral - 50) / 25)" },
+          { "libelle": "QI", "valeur": "arrondi((qi - 100) / 25)" },
+          { "libelle": "Social", "valeur": "arrondi((social - 50) / 25)" },
+          { "libelle": "Santé", "valeur": "arrondi((sante - 50) / 25)" },
+          { "libelle": "Karma", "valeur": "arrondi((karma - 50) / 25)" }
+        ],
+        "seuil": 12,
+        "relance": 10
+      },
       "issues": [
         {
+          "condition": "jet >= 12",
           "texte": "C'est réciproque. Vous ne dormez plus.",
           "impact": "pose('premier_amour'); moral += 10"
         },
         {
+          "condition": "jet < 12",
           "texte": "« On reste amis ? »",
           "impact": "moral -= 8"
         }

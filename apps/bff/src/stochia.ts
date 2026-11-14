@@ -28,6 +28,7 @@ const parentSchema = z.object({
   first_name: nameSchema.nullable(),
   work: workSchema.nullable(),
   death_date: calendarDate.nullable(),
+  iq: z.number().int(),
 });
 
 const siblingSchema = z.object({
@@ -35,6 +36,7 @@ const siblingSchema = z.object({
   sex: z.enum(["female", "male"]),
   first_name: nameSchema.nullable(),
   death_date: calendarDate.nullable(),
+  iq: z.number().int(),
 });
 
 export const lifeResponseSchema = z.object({

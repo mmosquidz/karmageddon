@@ -19,6 +19,8 @@ export type Config = {
   allowedOrigins: string[];
   timeoutMs: number;
   retryDelayMs: number;
+  /** The country's GDP is a bonus to a birth: it gets a shorter wait than the life itself. */
+  economyTimeoutMs: number;
 };
 
 export function applyEnvFile(path = resolve(process.cwd(), ".env")): void {
@@ -79,5 +81,6 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     allowedOrigins,
     timeoutMs: 25_000,
     retryDelayMs: 400,
+    economyTimeoutMs: 5_000,
   };
 }

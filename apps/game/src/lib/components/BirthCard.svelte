@@ -4,8 +4,8 @@
   import { Separator } from "$lib/components/ui/separator";
   import { flavorLine } from "$lib/copy/fr";
   import {
+    COUNTRY_INCOMES,
     SETTLEMENTS,
-    formatCentile,
     formatCoordinates,
     formatDate,
     formatFertility,
@@ -15,6 +15,7 @@
     sexWord,
   } from "$lib/format";
   import GameCard from "./GameCard.svelte";
+  import WorldMap from "./WorldMap.svelte";
 
   let { card }: { card: BirthCard } = $props();
 
@@ -45,6 +46,14 @@
     </span>
   </div>
 
+  <figure class="mt-4">
+    <WorldMap
+      latitude={card.place.latitude}
+      longitude={card.place.longitude}
+      label={formatPlace(card)}
+    />
+  </figure>
+
   <Separator class="my-6" />
 
   <h3 class="font-serif text-xl">Au départ</h3>
@@ -68,11 +77,13 @@
       <dd class="mt-1 text-lg font-medium">{formatFertility(card.context.totalFertility)}</dd>
       <dd class="mt-1 text-xs leading-relaxed text-muted-foreground">Enfants par femme, l’année de la naissance.</dd>
     </div>
-    {#if card.context.parentsWealthPercentile != null}
+    {#if card.context.countryIncome != null}
       <div>
-        <dt class="text-xs tracking-wide text-muted-foreground uppercase">Foyer parental</dt>
-        <dd class="mt-1 text-lg font-medium">{formatCentile(card.context.parentsWealthPercentile)}</dd>
-        <dd class="mt-1 text-xs leading-relaxed text-muted-foreground">Rang du patrimoine du foyer dans le pays.</dd>
+        <dt class="text-xs tracking-wide text-muted-foreground uppercase">Richesse du pays</dt>
+        <dd class="mt-1 text-lg font-medium">{COUNTRY_INCOMES[card.context.countryIncome]}</dd>
+        <dd class="mt-1 text-xs leading-relaxed text-muted-foreground">
+          PIB par habitant du pays, à la naissance ou à la dernière année connue.
+        </dd>
       </div>
     {/if}
   </dl>

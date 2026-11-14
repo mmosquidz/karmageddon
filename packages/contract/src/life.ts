@@ -22,6 +22,8 @@ export const lifeStatusSchema = z.object({
   social: gauge,
   morale: gauge,
   karma: gauge,
+  /** Starts at 0 and grows with each year in school. */
+  education: gauge,
   /** Game units, not a currency. */
   wealth: z.number().finite(),
   inSchool: z.boolean(),
@@ -56,9 +58,36 @@ export type Turn = z.infer<typeof turnSchema>;
 export const choiceRequestSchema = z.object({ choice: z.string().min(1).max(64) });
 export type ChoiceRequest = z.infer<typeof choiceRequestSchema>;
 
+/** One stat's integer on a visible die. The formula that produced it stays on the BFF. */
+export const drawModifierSchema = z.object({
+  label: z.string().min(1).max(40),
+  value: z.number().int().min(-100).max(100),
+});
+export type DrawModifier = z.infer<typeof drawModifierSchema>;
+
+/** The die the player is allowed to see: the face, the modifiers, the total, the target. */
+export const drawSchema = z
+  .object({
+    faces: z.number().int().min(2).max(100),
+    roll: z.number().int().min(1).max(100),
+    modifiers: z.array(drawModifierSchema).max(8),
+    total: z.number().int().min(-500).max(500),
+    target: z.number().int().min(-500).max(500),
+  })
+  .refine((draw) => draw.roll <= draw.faces, { path: ["roll"] });
+export type Draw = z.infer<typeof drawSchema>;
+
+/** One paid reroll is still available. Absent once it has been used, or when it cannot be paid. */
+export const rerollOfferSchema = z.object({
+  cost: z.number().int().min(1).max(100),
+});
+export type RerollOffer = z.infer<typeof rerollOfferSchema>;
+
 /** The outcome that was drawn for the choice, and the life after it. */
 export const outcomeSchema = z.object({
   text: z.string().min(1),
   status: lifeStatusSchema,
+  draw: drawSchema.optional(),
+  reroll: rerollOfferSchema.optional(),
 });
 export type Outcome = z.infer<typeof outcomeSchema>;

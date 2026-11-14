@@ -1,0 +1,25 @@
+{
+  "slug": "forte-fievre",
+  "type": "tuile",
+  "titre": "Une forte fièvre vous garde au lit",
+  "condition": "age >= 1 && age <= 14",
+  "poids": "0.5",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Garder le thermomètre sous la langue",
+      "issues": [
+        {
+          "condition": "scolarise",
+          "texte": "Trois jours à 40 °C, et une interrogation manquée.",
+          "impact": "sante -= 4; moral -= 2; education -= 2"
+        },
+        {
+          "condition": "!scolarise",
+          "texte": "Trois jours à 40 °C, puis tout redescend.",
+          "impact": "sante -= 4; moral -= 2"
+        }
+      ]
+    }
+  ]
+}

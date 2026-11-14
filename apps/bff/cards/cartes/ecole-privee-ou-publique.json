@@ -1,0 +1,36 @@
+{
+  "slug": "ecole-privee-ou-publique",
+  "type": "choix",
+  "titre": "C'est la rentrée : école privée ou école publique ?",
+  "condition": "age >= 6 && !a('ecole') && revenuPaysConnu && revenuPays == 'eleve'",
+  "poids": "60",
+  "unique": true,
+  "options": [
+    {
+      "id": "privee",
+      "libelle": "L'école privée",
+      "issues": [
+        {
+          "condition": "rangParentsConnu && rangParents >= 40",
+          "texte": "Uniforme, classes réduites et réunions de parents interminables.",
+          "impact": "scolarise = vrai; pose('ecole'); pose('ecole_privee'); education += 5; social -= 2"
+        },
+        {
+          "condition": "!(rangParentsConnu && rangParents >= 40)",
+          "texte": "La liste d'attente est trop longue. Ce sera l'école publique, à dix minutes à pied.",
+          "impact": "scolarise = vrai; pose('ecole'); social += 3"
+        }
+      ]
+    },
+    {
+      "id": "publique",
+      "libelle": "L'école publique",
+      "issues": [
+        {
+          "texte": "Cartable neuf, chaussures neuves, larmes neuves.",
+          "impact": "scolarise = vrai; pose('ecole'); social += 3"
+        }
+      ]
+    }
+  ]
+}

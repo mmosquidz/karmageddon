@@ -3,6 +3,11 @@ import type { LifeStatus, Sex } from "@karmageddon/contract";
 const amount = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 const signedAmount = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0, signDisplay: "exceptZero" });
 
+/** A modifier on a die: +2, −1, or 0. */
+export function formatSigned(value: number): string {
+  return signedAmount.format(value);
+}
+
 export function formatAge(age: number): string {
   return age < 2 ? `${age} an` : `${age} ans`;
 }
@@ -17,6 +22,7 @@ export const GAUGES = [
   { key: "social", label: "Social" },
   { key: "morale", label: "Moral" },
   { key: "karma", label: "Karma" },
+  { key: "education", label: "Éducation" },
 ] as const satisfies readonly { key: keyof LifeStatus; label: string }[];
 
 function plural(count: number, one: string, many: string): string {
@@ -52,12 +58,12 @@ export function statusChanges(before: LifeStatus, after: LifeStatus, sex: Sex): 
   for (const gauge of GAUGES) {
     const delta = Math.round(after[gauge.key] - before[gauge.key]);
     if (delta !== 0) {
-      changes.push(`${gauge.label} ${signedAmount.format(delta)}`);
+      changes.push(`${gauge.label} ${formatSigned(delta)}`);
     }
   }
   const wealth = Math.round(after.wealth - before.wealth);
   if (wealth !== 0) {
-    changes.push(`Patrimoine ${signedAmount.format(wealth)}`);
+    changes.push(`Patrimoine ${formatSigned(wealth)}`);
   }
   if (before.inSchool !== after.inSchool) {
     changes.push(after.inSchool ? `Scolarisé${e}` : "Fin de la scolarité");

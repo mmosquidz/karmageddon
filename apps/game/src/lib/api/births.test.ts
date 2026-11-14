@@ -19,6 +19,7 @@ const card = {
       birthCountryCode: "FR",
       work: null,
       diedBeforeBirth: false,
+      iq: 101,
     },
     father: {
       firstName: "Luc",
@@ -26,10 +27,11 @@ const card = {
       birthCountryCode: "FR",
       work: { employment: "not_employed", level: "country", occupation: null },
       diedBeforeBirth: false,
+      iq: 98,
     },
   },
   elderSiblings: [],
-  context: { lifeExpectancyAtBirth: 85.1, totalFertility: 1.8, parentsWealthPercentile: null },
+  context: { lifeExpectancyAtBirth: 85.1, totalFertility: 1.8, parentsWealthPercentile: null, countryIncome: "high" },
   record: { seed: "7", modelVersion: "v", dataSource: "WPP" },
 };
 

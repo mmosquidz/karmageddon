@@ -31,6 +31,8 @@ export const parentSchema = z.object({
   birthCountryCode: z.string().min(2).max(3),
   work: workSchema.nullable(),
   diedBeforeBirth: z.boolean(),
+  /** Wechsler IQ, already fixed on the day of birth. */
+  iq: z.number().int(),
 });
 export type Parent = z.infer<typeof parentSchema>;
 
@@ -39,8 +41,14 @@ export const elderSiblingSchema = z.object({
   sex: sexSchema,
   birthDate: calendarDate,
   diedBeforeBirth: z.boolean(),
+  /** Wechsler IQ, already fixed on the day of birth. */
+  iq: z.number().int(),
 });
 export type ElderSibling = z.infer<typeof elderSiblingSchema>;
+
+/** Income level of the birth country, from its GDP per capita. The dollar figure stays on the BFF. */
+export const countryIncomeSchema = z.enum(["low", "middle", "high"]);
+export type CountryIncome = z.infer<typeof countryIncomeSchema>;
 
 export const birthCardSchema = z.object({
   identity: z.object({
@@ -67,6 +75,8 @@ export const birthCardSchema = z.object({
     lifeExpectancyAtBirth: z.number(),
     totalFertility: z.number(),
     parentsWealthPercentile: z.number().int().min(1).max(100).nullable(),
+    /** `null` when Stochia has no figure for the country, or could not be asked. */
+    countryIncome: countryIncomeSchema.nullable(),
   }),
   record: z.object({
     seed: z.string().min(1),

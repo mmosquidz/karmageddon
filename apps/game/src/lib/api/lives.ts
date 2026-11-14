@@ -13,7 +13,7 @@ export class LifeRequestError extends Error {
 
 const TIMEOUT_MS = 15_000;
 
-function lifePath(lifeId: string, action: "next" | "choice"): string {
+function lifePath(lifeId: string, action: "next" | "choice" | "reroll"): string {
   return `/api/lives/${encodeURIComponent(lifeId)}/${action}`;
 }
 
@@ -49,6 +49,18 @@ export async function sendChoice(lifeId: string, choice: string, options: Client
     return await postJson(lifePath(lifeId, "choice"), outcomeSchema, {
       ...options,
       body: { choice },
+      defaultTimeoutMs: TIMEOUT_MS,
+    });
+  } catch (error) {
+    throw lifeError(error);
+  }
+}
+
+/** Rolls the die of the choice just played again. The BFF forgets the first result. */
+export async function sendReroll(lifeId: string, options: ClientOptions = {}): Promise<Outcome> {
+  try {
+    return await postJson(lifePath(lifeId, "reroll"), outcomeSchema, {
+      ...options,
       defaultTimeoutMs: TIMEOUT_MS,
     });
   } catch (error) {

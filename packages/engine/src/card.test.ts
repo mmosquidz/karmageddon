@@ -182,6 +182,56 @@ describe("compileCard", () => {
     ).toEqual([{ path: "variables[1].nom", message: "le nom « de » est déjà pris" }]);
   });
 
+  test("a die owns the name jet, and its modifiers cannot roll", () => {
+    const die = {
+      de: 20,
+      modificateurs: [{ libelle: "Moral", valeur: "arrondi((moral - 50) / 25)" }],
+      seuil: 12,
+      relance: 10,
+    };
+    const card = compiled(
+      simpleCard("declaration", {
+        options: [
+          {
+            id: "oser",
+            libelle: "Oser",
+            tirage: die,
+            issues: [
+              { condition: "jet >= 12", texte: "Oui." },
+              { condition: "jet < 12", texte: "Non." },
+            ],
+          },
+        ],
+      }),
+    );
+    expect(card.options[0]?.tirage).toMatchObject({ de: 20, seuil: 12, relance: 10 });
+    expect(card.options[0]?.issues).toHaveLength(2);
+
+    expect(
+      problems(simpleCard("nom-pris", { variables: [{ nom: "jet", valeur: "1" }], options: [{ id: "oser", libelle: "Oser", tirage: die, issues: [{ texte: "Fait." }] }] })),
+    ).toEqual([{ path: "options[0].tirage", message: "le nom « jet » est déjà pris" }]);
+
+    expect(
+      problems(
+        simpleCard("hasard", {
+          options: [
+            {
+              id: "oser",
+              libelle: "Oser",
+              tirage: { ...die, modificateurs: [{ libelle: "Chance", valeur: "entier(1, 6)" }] },
+              issues: [{ texte: "Fait." }],
+            },
+          ],
+        }),
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        path: "options[0].tirage.modificateurs[0].valeur",
+        message: expect.stringContaining("« entier » n'est pas permis ici"),
+      }),
+    ]);
+  });
+
   test("a variable can be read by an impact, not changed", () => {
     expect(
       compileCard(simpleCard("lecture", { variables: [{ nom: "de", valeur: "entier(1, 6)" }] }, "sante -= de")).ok,

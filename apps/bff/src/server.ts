@@ -4,12 +4,29 @@ import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { toBirthCard } from "./birth-card.js";
 import type { Config } from "./config.js";
+import { CountryIncomes } from "./economy.js";
 import type { Lives } from "./lives.js";
 import { fetchLife, UpstreamFailure } from "./stochia.js";
 
-export function createApp(options: { config: Config; lives: Lives; fetchImpl?: typeof fetch }): Hono {
+export function createApp(options: {
+  config: Config;
+  lives: Lives;
+  fetchImpl?: typeof fetch;
+  countryIncomes?: CountryIncomes;
+}): Hono {
   const { config, lives } = options;
   const fetchImpl = options.fetchImpl ?? fetch;
+  const countryIncomes =
+    options.countryIncomes ??
+    new CountryIncomes({
+      config,
+      fetchImpl,
+      log: (line) => {
+        if (process.env.NODE_ENV !== "test") {
+          console.error(line);
+        }
+      },
+    });
   const app = new Hono();
 
   app.use(
@@ -26,7 +43,11 @@ export function createApp(options: { config: Config; lives: Lives; fetchImpl?: t
   app.post("/api/births", async (c) => {
     try {
       const life = await fetchLife(config, fetchImpl);
-      const birth = toBirthCard(life);
+      const income = await countryIncomes.incomeAt(
+        life.birthplace.country_code,
+        Number(life.birth_date.slice(0, 4)),
+      );
+      const birth = toBirthCard(life, income);
       return c.json({ lifeId: lives.start(birth), birth });
     } catch (error) {
       const failure = error instanceof UpstreamFailure ? error : new UpstreamFailure("upstream_error");
@@ -65,6 +86,16 @@ export function createApp(options: { config: Config; lives: Lives; fetchImpl?: t
       return result.ok ? c.json(result.outcome) : errorResponse(c, { code: result.code });
     },
   );
+
+  app.post("/api/lives/:id/reroll", (c) => {
+    const id = lifeIdSchema.safeParse(c.req.param("id"));
+    const result = id.success ? lives.reroll(id.data) : null;
+    return result === null
+      ? errorResponse(c, { code: "life_not_found" })
+      : result.ok
+        ? c.json(result.outcome)
+        : errorResponse(c, { code: result.code });
+  });
 
   return app;
 }

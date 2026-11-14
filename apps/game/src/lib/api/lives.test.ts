@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { LifeRequestError, requestTurn, sendChoice } from "./lives.js";
+import { LifeRequestError, requestTurn, sendChoice, sendReroll } from "./lives.js";
 
 const LIFE_ID = "abcdefghijklmnopqrstuvwx";
 
@@ -9,6 +9,7 @@ const status = {
   social: 52,
   morale: 49,
   karma: 55,
+  education: 5,
   wealth: 0,
   inSchool: true,
   employed: false,
@@ -68,6 +69,48 @@ test("sends a choice and drops what the contract does not know", async () => {
   });
   expect(sent).toEqual({ choice: "oui" });
   expect(outcome).toEqual({ text: "Vous pédalez.", status });
+});
+
+test("reads a die and drops a formula the contract does not know", async () => {
+  const draw = {
+    faces: 20,
+    roll: 14,
+    modifiers: [{ label: "Moral", value: 2, formule: "secret" }],
+    total: 16,
+    target: 12,
+    seuil: "jet >= 12",
+  };
+  let path = "";
+  const outcome = await sendChoice(LIFE_ID, "declarer", {
+    baseUrl: "http://bff.test",
+    fetchImpl: async (input) => {
+      path = String(input);
+      return json({ text: "C'est réciproque.", status, draw, reroll: { cost: 10, karma: 50 }, issues: ["secret"] });
+    },
+  });
+  expect(path).toContain("/choice");
+  expect(outcome).toEqual({
+    text: "C'est réciproque.",
+    status,
+    draw: { faces: 20, roll: 14, modifiers: [{ label: "Moral", value: 2 }], total: 16, target: 12 },
+    reroll: { cost: 10 },
+  });
+
+  let rerollPath = "";
+  let rerollBody: string | undefined;
+  const again = await sendReroll(LIFE_ID, {
+    baseUrl: "http://bff.test",
+    fetchImpl: async (input, init) => {
+      rerollPath = String(input);
+      rerollBody = init?.body === undefined ? undefined : String(init.body);
+      return json({ text: "« On reste amis ? »", status: { ...status, karma: 45 } });
+    },
+  });
+  expect(rerollPath).toContain("/reroll");
+  expect(rerollBody).toBeUndefined();
+  expect(again.text).toBe("« On reste amis ? »");
+  expect(again.draw).toBeUndefined();
+  expect(again.reroll).toBeUndefined();
 });
 
 test("maps the BFF errors, a dead connection and its own timeout", async () => {

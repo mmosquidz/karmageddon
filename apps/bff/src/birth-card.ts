@@ -1,6 +1,7 @@
 import {
   birthCardSchema,
   type BirthCard,
+  type CountryIncome,
   type Parent,
   type Work,
 } from "@karmageddon/contract";
@@ -43,11 +44,15 @@ function toParent(parent: LifeResponse["parents"]["mother"], birthDate: string):
     birthCountryCode: parent.birth_country.country_code,
     work: toWork(parent.work),
     diedBeforeBirth: diedBefore(parent.death_date, birthDate),
+    iq: parent.iq,
   };
 }
 
-/** Keeps only what is already true on the day of birth. */
-export function toBirthCard(life: LifeResponse): BirthCard {
+/**
+ * Keeps only what is already true on the day of birth. The country's income level is asked
+ * separately (`CountryIncomes`), and only its level comes in.
+ */
+export function toBirthCard(life: LifeResponse, countryIncome: CountryIncome | null): BirthCard {
   return birthCardSchema.parse({
     identity: {
       firstName: blankToNull(life.first_name?.name),
@@ -76,11 +81,13 @@ export function toBirthCard(life: LifeResponse): BirthCard {
         sex: sibling.sex,
         birthDate: sibling.birth_date,
         diedBeforeBirth: diedBefore(sibling.death_date, life.birth_date),
+        iq: sibling.iq,
       })),
     context: {
       lifeExpectancyAtBirth: life.life_expectancy,
       totalFertility: life.total_fertility,
       parentsWealthPercentile: life.wealth?.parents_percentile ?? null,
+      countryIncome,
     },
     record: {
       seed: life.seed,

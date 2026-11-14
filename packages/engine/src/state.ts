@@ -1,6 +1,18 @@
 import type { BirthCard } from "@karmageddon/contract";
 import { z } from "zod";
-import { GAUGE_MAX, GAUGE_MIN, GAUGE_START, KARMA_START, MAJORITY_AGE, PATRIMOINE_START } from "./parameters.js";
+import {
+  EDUCATION_QI_STEP,
+  EDUCATION_START,
+  EDUCATION_WEALTH_STEP,
+  EDUCATION_YEAR_BASE,
+  EDUCATION_YEAR_MIN,
+  GAUGE_MAX,
+  GAUGE_MIN,
+  GAUGE_START,
+  KARMA_START,
+  MAJORITY_AGE,
+  PATRIMOINE_START,
+} from "./parameters.js";
 import { LABEL_PATTERN, SLUG_PATTERN, type Value, type ValueType } from "./script/index.js";
 
 const gauge = z.number().min(GAUGE_MIN).max(GAUGE_MAX);
@@ -30,6 +42,8 @@ export const lifeStateSchema = z
     qi: z.number().int(),
     /** Wealth rank of the parents at birth, 1 to 100. `null` when Stochia has none. */
     rangParents: z.number().int().min(1).max(100).nullable(),
+    /** Income level of the birth country. `null` when the BFF could not learn it. */
+    revenuPays: z.enum(["faible", "intermediaire", "eleve"]).nullable(),
 
     age: count,
 
@@ -37,6 +51,7 @@ export const lifeStateSchema = z
     social: gauge,
     moral: gauge,
     karma: gauge,
+    education: gauge,
     patrimoine: z.number().finite(),
 
     scolarise: z.boolean(),
@@ -65,11 +80,14 @@ export const STATE_FIELDS = {
   qi: { type: "number", access: "none" },
   rangParents: { type: "number", access: "none" },
   rangParentsConnu: { type: "boolean", access: "none" },
+  revenuPays: { type: "string", access: "none" },
+  revenuPaysConnu: { type: "boolean", access: "none" },
   age: { type: "number", access: "none" },
   sante: { type: "number", access: "gauge" },
   social: { type: "number", access: "gauge" },
   moral: { type: "number", access: "gauge" },
   karma: { type: "number", access: "gauge" },
+  education: { type: "number", access: "gauge" },
   patrimoine: { type: "number", access: "amount" },
   scolarise: { type: "boolean", access: "flag" },
   emploi: { type: "boolean", access: "flag" },
@@ -107,6 +125,8 @@ export function readField(state: LifeState, name: StateFieldName): Value | null 
   switch (name) {
     case "rangParentsConnu":
       return state.rangParents !== null;
+    case "revenuPaysConnu":
+      return state.revenuPays !== null;
     case "mineur":
       return state.age < MAJORITY_AGE;
     case "parent":
@@ -154,6 +174,22 @@ export function writeField(state: LifeState, name: StateFieldName, value: Value)
   return { ...state, [name]: next + 0 };
 }
 
+/** What one year in school adds to `education`, from IQ and the parents' wealth rank. */
+export function schoolYearGain(state: LifeState): number {
+  const wealth = state.rangParents === null ? 0 : (state.rangParents - 50) / EDUCATION_WEALTH_STEP;
+  const gain = EDUCATION_YEAR_BASE + (state.qi - 100) / EDUCATION_QI_STEP + wealth;
+  return Math.max(EDUCATION_YEAR_MIN, Math.round(gain));
+}
+
+/**
+ * The state one year later. The engine's only yearly rule: a year spent in school
+ * (`scolarise` at the end of it) adds to `education`. No draw, so no generator.
+ */
+export function nextYear(state: LifeState): LifeState {
+  const older = { ...state, age: state.age + 1 };
+  return state.scolarise ? writeField(older, "education", state.education + schoolYearGain(state)) : older;
+}
+
 export function hasLabel(state: LifeState, label: string): boolean {
   return state.marques.includes(label);
 }
@@ -176,6 +212,11 @@ export function hasPlayed(state: LifeState, slug: string): boolean {
   return state.historique.some((played) => played.carte === slug);
 }
 
+const REVENU_PAYS = { low: "faible", middle: "intermediaire", high: "eleve" } as const satisfies Record<
+  NonNullable<BirthCard["context"]["countryIncome"]>,
+  LifeState["revenuPays"]
+>;
+
 /**
  * The state on the day of birth. It reads the birth sheet the BFF already filtered,
  * never a Stochia life, so nothing simulated after birth can enter the game state.
@@ -187,11 +228,13 @@ export function initialState(birth: BirthCard): LifeState {
     milieu: birth.family.habitat === "urban" ? "urbain" : "rural",
     qi: birth.identity.iq,
     rangParents: birth.context.parentsWealthPercentile,
+    revenuPays: birth.context.countryIncome === null ? null : REVENU_PAYS[birth.context.countryIncome],
     age: 0,
     sante: GAUGE_START,
     social: GAUGE_START,
     moral: GAUGE_START,
     karma: KARMA_START,
+    education: EDUCATION_START,
     patrimoine: PATRIMOINE_START,
     scolarise: false,
     emploi: false,

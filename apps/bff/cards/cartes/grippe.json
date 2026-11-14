@@ -11,7 +11,7 @@
       "issues": [
         {
           "texte": "Une semaine de tisanes et de séries.",
-          "impact": "sante -= entier(2, 6); moral -= 2"
+          "impact": "sante -= entier(2, 6); moral -= 2; education -= scolarise ? 1 : 0"
         }
       ]
     }

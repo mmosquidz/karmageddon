@@ -12,7 +12,7 @@
       "issues": [
         {
           "texte": "Dix jours de boutons et d'interdiction de gratter.",
-          "impact": "sante -= 3; moral -= 2"
+          "impact": "sante -= 3; moral -= 2; education -= scolarise ? 1 : 0"
         }
       ]
     }

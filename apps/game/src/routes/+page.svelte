@@ -117,6 +117,7 @@
         lifeId={born.lifeId}
         firstName={born.birth.identity.firstName}
         sex={born.birth.identity.sex}
+        birth={born.birth}
         onNewLife={again}
       />
     {/key}

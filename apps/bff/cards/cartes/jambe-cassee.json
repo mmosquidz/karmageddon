@@ -1,0 +1,25 @@
+{
+  "slug": "jambe-cassee",
+  "type": "tuile",
+  "titre": "Vous vous cassez la jambe",
+  "condition": "age >= 4",
+  "poids": "a('velo') || a('sportif') ? 0.4 : 0.25",
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Apprendre à marcher avec des béquilles",
+      "issues": [
+        {
+          "condition": "scolarise",
+          "texte": "Deux mois de plâtre, et des cours rattrapés sur les cahiers des autres.",
+          "impact": "sante -= 10; moral -= 4; education -= 3"
+        },
+        {
+          "condition": "!scolarise",
+          "texte": "Deux mois de plâtre. Tout le monde veut signer dessus.",
+          "impact": "sante -= 10; moral -= 4"
+        }
+      ]
+    }
+  ]
+}

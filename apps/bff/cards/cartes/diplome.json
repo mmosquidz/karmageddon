@@ -7,7 +7,7 @@
   "variables": [
     {
       "nom": "note",
-      "valeur": "min(20, max(0, entier(5, 15) + arrondi((qi - 100) / 5)))"
+      "valeur": "min(20, max(0, entier(5, 15) + arrondi((qi - 100) / 5) + arrondi((education - 60) / 10)))"
     }
   ],
   "options": [

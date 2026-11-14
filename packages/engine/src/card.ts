@@ -41,10 +41,33 @@ const outcomeSchema = z
   })
   .strict();
 
+const modifierSchema = z
+  .object({
+    libelle: z.string().trim().min(1).max(40),
+    /** Read from the state. No chance: the die is the only random part. */
+    valeur: script.min(1),
+  })
+  .strict();
+
+/**
+ * A visible die on one option. The engine rolls `de`, adds the modifiers,
+ * and names the total `jet` for that option's outcomes.
+ * `relance` is a karma price for one new roll; the first result is dropped.
+ */
+const tirageSchema = z
+  .object({
+    de: z.number().int().min(2).max(100),
+    modificateurs: z.array(modifierSchema).max(8),
+    seuil: z.number().int().min(-500).max(500),
+    relance: z.number().int().min(1).max(100).optional(),
+  })
+  .strict();
+
 const optionSchema = z
   .object({
     id: z.string().regex(LABEL_PATTERN),
     libelle: z.string().trim().min(1),
+    tirage: tirageSchema.optional(),
     issues: z.array(outcomeSchema).min(1),
   })
   .strict();
@@ -87,9 +110,22 @@ export type CompiledOutcome = {
   readonly impact: CompiledImpact;
 };
 
+export type CompiledModifier = {
+  readonly libelle: string;
+  readonly valeur: CompiledExpression;
+};
+
+export type CompiledTirage = {
+  readonly de: number;
+  readonly modificateurs: readonly CompiledModifier[];
+  readonly seuil: number;
+  readonly relance: number | null;
+};
+
 export type CompiledOption = {
   readonly id: string;
   readonly libelle: string;
+  readonly tirage: CompiledTirage | null;
   readonly issues: readonly CompiledOutcome[];
 };
 
@@ -194,24 +230,56 @@ export function compileCard(raw: unknown): CompileResult {
     }
     seen.add(option.id);
 
+    // `jet` exists only for an option that rolls a die, and only for its outcomes.
+    let tirage: CompiledTirage | null = null;
+    const issueScope = new Map(scope);
+    if (option.tirage !== undefined) {
+      const tiragePath = `${optionPath}.tirage`;
+      if (scope.has("jet")) {
+        problems.push({ path: tiragePath, message: "le nom « jet » est déjà pris" });
+      } else {
+        issueScope.set("jet", "number");
+      }
+      const modificateurs: CompiledModifier[] = [];
+      let modifiersOk = true;
+      option.tirage.modificateurs.forEach((modifier, modifierIndex) => {
+        const valeur = attempt(`${tiragePath}.modificateurs[${modifierIndex}].valeur`, () =>
+          compileExpression(modifier.valeur, { scope, random: false }, "number"),
+        );
+        if (valeur === null) {
+          modifiersOk = false;
+          return;
+        }
+        modificateurs.push({ libelle: modifier.libelle, valeur });
+      });
+      if (modifiersOk && !scope.has("jet")) {
+        tirage = {
+          de: option.tirage.de,
+          modificateurs,
+          seuil: option.tirage.seuil,
+          relance: option.tirage.relance ?? null,
+        };
+      }
+    }
+
     const issues: CompiledOutcome[] = [];
     option.issues.forEach((outcome, outcomeIndex) => {
       const path = `${optionPath}.issues[${outcomeIndex}]`;
-      // An outcome is chosen from variables already drawn: chance stays in `variables` and `impact`.
+      // An outcome is chosen from variables already drawn: chance stays in `variables`, a die, and `impact`.
       const outcomeCondition = attempt(`${path}.condition`, () =>
-        compileExpression(outcome.condition, { scope, random: false }, "boolean"),
+        compileExpression(outcome.condition, { scope: issueScope, random: false }, "boolean"),
       );
       const outcomePoids = attempt(`${path}.poids`, () =>
-        compileExpression(outcome.poids, { scope, random: false }, "number"),
+        compileExpression(outcome.poids, { scope: issueScope, random: false }, "number"),
       );
       const impact = attempt(`${path}.impact`, () =>
-        compileImpact(outcome.impact, { scope, targets: STATE_TARGETS, random: true }),
+        compileImpact(outcome.impact, { scope: issueScope, targets: STATE_TARGETS, random: true }),
       );
       if (outcomeCondition !== null && outcomePoids !== null && impact !== null) {
         issues.push({ condition: outcomeCondition, poids: outcomePoids, texte: outcome.texte, impact });
       }
     });
-    options.push({ id: option.id, libelle: option.libelle, issues });
+    options.push({ id: option.id, libelle: option.libelle, tirage, issues });
   });
 
   if (problems.length > 0 || condition === null || poids === null) {

@@ -314,6 +314,85 @@ describe("resolveCard", () => {
     expect(live("7804448558973285410")).not.toEqual(first);
   });
 
+  test("a die is one roll plus integer modifiers, and the total is jet", () => {
+    const card = compiled({
+      slug: "declaration",
+      type: "rencontre",
+      titre: "Un cœur",
+      options: [
+        {
+          id: "oser",
+          libelle: "Oser",
+          tirage: {
+            de: 20,
+            modificateurs: [
+              { libelle: "Moral", valeur: "arrondi((moral - 50) / 25)" },
+              { libelle: "QI", valeur: "arrondi((qi - 100) / 25)" },
+            ],
+            seuil: 12,
+            relance: 10,
+          },
+          issues: [
+            { condition: "jet >= 12", texte: "Oui.", impact: "moral += 10" },
+            { condition: "jet < 12", texte: "Non.", impact: "moral -= 8" },
+          ],
+        },
+        { id: "taire", libelle: "Se taire", issues: [{ texte: "Rien.", impact: "moral -= 2" }] },
+      ],
+    });
+    // qi 104 adds 0. A face of 11 totals 11: short. The second number only picks among the issues still open.
+    const short = resolveCard(card, "oser", stateWith({ moral: 50 }), sequence([10 / 20, 0.2]));
+    expect(short.draw).toMatchObject({
+      faces: 20,
+      roll: 11,
+      modifiers: [
+        { label: "Moral", value: 0 },
+        { label: "QI", value: 0 },
+      ],
+      total: 11,
+      target: 12,
+      relance: 10,
+    });
+    expect(short.variables.jet).toBe(11);
+    expect(short.issue).toEqual({ index: 1, texte: "Non." });
+    expect(short.state.moral).toBe(42);
+
+    const loved = resolveCard(card, "oser", stateWith({ moral: 75, qi: 130 }), sequence([6 / 20, 0]));
+    expect(loved.draw?.modifiers).toEqual([
+      { label: "Moral", value: 1 },
+      { label: "QI", value: 1 },
+    ]);
+    expect(loved.draw?.roll).toBe(7);
+    expect(loved.draw?.total).toBe(9);
+    expect(loved.issue.texte).toBe("Non.");
+
+    const clear = resolveCard(card, "oser", stateWith({ moral: 100, qi: 150 }), sequence([0.99, 0]));
+    expect(clear.draw?.total).toBe(20 + 2 + 2);
+    expect(clear.issue).toEqual({ index: 0, texte: "Oui." });
+    expect(clear.state.moral).toBe(100);
+
+    const quiet = resolveCard(card, "taire", stateWith(), sequence([0]));
+    expect(quiet.draw).toBeNull();
+    expect(quiet.issue.texte).toBe("Rien.");
+    expect(quiet.variables.jet).toBeUndefined();
+
+    const messy = compiled(
+      simpleCard("flou", {
+        options: [
+          {
+            id: "suite",
+            libelle: "Continuer",
+            tirage: { de: 6, modificateurs: [{ libelle: "Moral", valeur: "moral / 30" }], seuil: 1 },
+            issues: [{ condition: "jet >= 1", texte: "Fait." }],
+          },
+        ],
+      }),
+    );
+    expect(resolutionFailure(() => resolveCard(messy, "suite", stateWith(), sequence([0, 0]))).message).toMatch(
+      /« Moral » doit être un nombre entier/,
+    );
+  });
+
   test("refuses an option the card does not have", () => {
     const rng = sequence([]);
     const error = resolutionFailure(() => resolveCard(PARCEL, "garder", stateWith(), rng));

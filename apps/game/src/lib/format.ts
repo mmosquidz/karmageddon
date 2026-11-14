@@ -1,4 +1,4 @@
-import type { BirthCard, Sex, Settlement } from "@karmageddon/contract";
+import type { BirthCard, CountryIncome, Sex, Settlement } from "@karmageddon/contract";
 
 const countries = new Intl.DisplayNames("fr", { type: "region" });
 const unknownRegion = countries.of("ZZ");
@@ -29,6 +29,12 @@ export const SETTLEMENTS: Record<Settlement, string> = {
   urban_centre: "Centre urbain",
   urban_cluster: "Agglomération urbaine",
   rural: "Zone rurale",
+};
+
+export const COUNTRY_INCOMES: Record<CountryIncome, string> = {
+  low: "Revenu faible",
+  middle: "Revenu intermédiaire",
+  high: "Revenu élevé",
 };
 
 const AU = new Set([
@@ -104,6 +110,13 @@ export function formatCoordinates(latitude: number, longitude: number): string {
   return `${formatAxis(latitude, "N", "S")} · ${formatAxis(longitude, "E", "O")}`;
 }
 
+/** Position équirectangulaire sur une carte de 360 par 180, origine en haut à gauche. */
+export function mapPoint(latitude: number, longitude: number): { x: number; y: number } {
+  const lat = Math.min(90, Math.max(-90, latitude));
+  const lon = Math.min(180, Math.max(-180, longitude));
+  return { x: lon + 180, y: 90 - lat };
+}
+
 export function formatLifeExpectancy(years: number): string {
   return `${oneDecimal.format(years)} ans`;
 }
@@ -137,6 +150,45 @@ export function habitatLabel(habitat: BirthCard["family"]["habitat"]): string {
 
 export function siblingRole(sex: Sex): string {
   return sex === "female" ? "Sœur aînée" : "Frère aîné";
+}
+
+/** Who is already in the household on the day of birth. */
+export function householdSentence(card: BirthCard): string {
+  const present = [
+    card.family.father.diedBeforeBirth ? null : "père",
+    card.family.mother.diedBeforeBirth ? null : "mère",
+    "vous",
+  ].filter((part): part is string => part !== null);
+  const sisters = card.elderSiblings.filter((sibling) => sibling.sex === "female" && !sibling.diedBeforeBirth).length;
+  const brothers = card.elderSiblings.filter((sibling) => sibling.sex === "male" && !sibling.diedBeforeBirth).length;
+  const kin = [frenchCount(sisters, "une sœur", "sœurs"), frenchCount(brothers, "un frère", "frères")].filter(
+    (part) => part !== "",
+  );
+  return finishSentence([...present, ...kin]);
+}
+
+function frenchCount(count: number, one: string, many: string): string {
+  if (count <= 0) {
+    return "";
+  }
+  if (count === 1) {
+    return one;
+  }
+  return `${count} ${many}`;
+}
+
+function finishSentence(parts: string[]): string {
+  const [first, ...rest] = parts;
+  if (first === undefined) {
+    return "Vous.";
+  }
+  const head = first.charAt(0).toLocaleUpperCase("fr") + first.slice(1);
+  if (rest.length === 0) {
+    return `${head}.`;
+  }
+  const last = rest[rest.length - 1] ?? "";
+  const middle = rest.slice(0, -1);
+  return `${[head, ...middle].join(", ")} et ${last}.`;
 }
 
 export function initialOf(name: string | null): string {

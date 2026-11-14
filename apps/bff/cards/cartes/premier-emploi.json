@@ -7,7 +7,7 @@
   "variables": [
     {
       "nom": "score",
-      "valeur": "entier(1, 100) + (a('diplome_sup') ? 35 : a('bac') ? 20 : a('apprentissage') ? 25 : 0)"
+      "valeur": "entier(1, 100) + (a('diplome_sup') ? 35 : a('bac') ? 20 : a('apprentissage') ? 25 : 0) + arrondi(education / 10)"
     }
   ],
   "options": [

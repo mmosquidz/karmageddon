@@ -54,16 +54,21 @@ function datesIn(life: LifeResponse): string[] {
 
 describe("toBirthCard", () => {
   test("keeps the birth and drops every future or death field from a real life", () => {
-    const card = toBirthCard(fixture);
+    const card = toBirthCard(fixture, "middle");
     const encoded = JSON.stringify(card);
 
     expect(card.identity.firstName).toBe("Muhammad Al Fatih");
+    expect(card.context.countryIncome).toBe("middle");
+    expect(toBirthCard(fixture, null).context.countryIncome).toBeNull();
     expect(card.identity.sex).toBe("male");
     expect(card.identity.birthDate).toBe("2026-11-14");
     expect(card.place.city).toBe("Kecamatan Pringgabaya");
     expect(card.place.countryCode).toBe("ID");
     expect(card.family.mother.firstName).toBe("Nurhayati");
     expect(card.family.father.firstName).toBe("Sutrisno");
+    expect(card.family.mother.iq).toBe(107);
+    expect(card.family.father.iq).toBe(107);
+    expect(card.elderSiblings.map((sibling) => sibling.iq)).toEqual([110, 118, 108, 119]);
     expect(card.family.mother.diedBeforeBirth).toBe(false);
     expect(card.family.father.diedBeforeBirth).toBe(false);
     expect(card.elderSiblings.map((sibling) => sibling.firstName)).toEqual([
@@ -86,6 +91,8 @@ describe("toBirthCard", () => {
     expect(encoded).not.toContain("heat_dome");
     expect(encoded).not.toContain("career_start");
     expect(encoded).not.toContain("inheritance");
+    expect(encoded).not.toContain("20550");
+    expect(encoded).not.toContain("19180");
   });
 
   test("drops younger siblings and marks a death that already happened", () => {
@@ -106,7 +113,7 @@ describe("toBirthCard", () => {
       ],
     };
 
-    const card = toBirthCard(life);
+    const card = toBirthCard(life, null);
     const encoded = JSON.stringify(card);
 
     expect(card.family.mother.diedBeforeBirth).toBe(true);
@@ -128,7 +135,7 @@ describe("toBirthCard", () => {
         father: { ...fixture.parents.father, death_date: fixture.birth_date },
       },
     };
-    const card = toBirthCard(life);
+    const card = toBirthCard(life, null);
     expect(card.family.father.diedBeforeBirth).toBe(false);
     expect(JSON.stringify(card)).not.toContain("death");
   });

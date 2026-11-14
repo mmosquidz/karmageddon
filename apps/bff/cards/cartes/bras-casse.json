@@ -11,7 +11,7 @@
       "issues": [
         {
           "texte": "Six semaines de plâtre.",
-          "impact": "sante -= 8; moral -= 3"
+          "impact": "sante -= 8; moral -= 3; education -= scolarise ? 2 : 0"
         }
       ]
     }

@@ -1,5 +1,6 @@
 import {
   drawCard,
+  nextYear,
   resolveCard,
   seededRng,
   type CompiledCard,
@@ -59,8 +60,9 @@ function pickOption(card: CompiledCard, state: LifeState, rng: Rng, policy: Simu
 }
 
 /**
- * A tool to tune the cards, not a rule of the game: one card a year from the state's age
- * to `lastAge`, and an option picked by the policy, at random by default.
+ * A tool to tune the cards, not a rule of the game: the years pass as in a played life
+ * (`nextYear`), one card a year from the year after the state's age to `lastAge`, and an
+ * option picked by the policy, at random by default.
  * Every number comes from `rng`, so a seed replays the same life.
  */
 export function simulateLife(
@@ -72,8 +74,9 @@ export function simulateLife(
   const lastAge = options.lastAge ?? SIMULATION_LAST_AGE;
   let state = start;
   const years: SimulatedYear[] = [];
-  for (let age = start.age; age <= lastAge; age += 1) {
-    state = { ...state, age };
+  while (state.age < lastAge) {
+    state = nextYear(state);
+    const age = state.age;
     const card = drawCard(cards, state, rng, { sensibles: options.sensibles === true });
     if (card === null) {
       continue;

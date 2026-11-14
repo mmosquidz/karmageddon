@@ -32,14 +32,32 @@ export type Candidate = {
   poids: number;
 };
 
+export type DrawnModifier = {
+  label: string;
+  value: number;
+};
+
+/** What a die showed. `relance` stays on the BFF: the client only hears the price when a reroll is still for sale. */
+export type DrawnRoll = {
+  faces: number;
+  roll: number;
+  modifiers: readonly DrawnModifier[];
+  total: number;
+  target: number;
+  /** Karma a second roll costs, or null when this option cannot be rerolled. */
+  relance: number | null;
+};
+
 export type Resolution = {
   /** The state after the card. The state given to `resolveCard` is not changed. */
   state: LifeState;
   option: string;
   /** Index and text of the outcome that was drawn. */
   issue: { index: number; texte: string };
-  /** The intermediate draws, by name. */
+  /** The intermediate draws, by name. A die also stores its total as `jet`. */
   variables: Record<string, Value>;
+  /** The die, when the option has one. Null otherwise. */
+  draw: DrawnRoll | null;
 };
 
 export type ResolutionErrorCode = "option_inconnue" | "aucune_issue" | "script";
@@ -111,6 +129,12 @@ function pick<T extends { poids: number }>(candidates: readonly T[], rng: Rng): 
     }
   }
   return candidates[candidates.length - 1]!;
+}
+
+/** One face, the same way `entier(1, faces)` draws one. */
+function rollDie(faces: number, rng: Rng): number {
+  const drawn = 1 + Math.floor(rng.next() * faces);
+  return Math.min(drawn, faces);
 }
 
 /**
@@ -211,7 +235,8 @@ function applyImpact(impact: CompiledImpact, start: LifeState, variables: Readon
 }
 
 /**
- * Plays one option of a card: draws the variables, draws the outcome, applies its impact.
+ * Plays one option of a card: draws the variables, rolls a die when the option has one,
+ * draws the outcome, applies its impact.
  * Either everything is applied and a new state is returned, or a `ResolutionError` is thrown.
  */
 export function resolveCard(card: CompiledCard, optionId: string, state: LifeState, rng: Rng): Resolution {
@@ -228,6 +253,34 @@ export function resolveCard(card: CompiledCard, optionId: string, state: LifeSta
       step = `variable « ${variable.nom} »`;
       const value = evaluate(variable.valeur.ast, env);
       variables.set(variable.nom, typeof value === "number" ? value + 0 : value);
+    }
+
+    let draw: DrawnRoll | null = null;
+    if (option.tirage !== null) {
+      step = `tirage de l'option « ${option.id} »`;
+      const tirage = option.tirage;
+      const roll = rollDie(tirage.de, rng);
+      const reading = environment(() => state, variables, null);
+      const modifiers: DrawnModifier[] = [];
+      let bonus = 0;
+      for (const modifier of tirage.modificateurs) {
+        const value = evaluate(modifier.valeur.ast, reading);
+        if (typeof value !== "number" || !Number.isInteger(value)) {
+          throw new ScriptError(`« ${modifier.libelle} » doit être un nombre entier`, modifier.valeur.ast.position);
+        }
+        modifiers.push({ label: modifier.libelle, value });
+        bonus += value;
+      }
+      const total = roll + bonus;
+      variables.set("jet", total);
+      draw = {
+        faces: tirage.de,
+        roll,
+        modifiers,
+        total,
+        target: tirage.seuil,
+        relance: tirage.relance,
+      };
     }
 
     // Outcomes are chosen from the state and the variables alone, with one pick.
@@ -265,6 +318,7 @@ export function resolveCard(card: CompiledCard, optionId: string, state: LifeSta
       option: option.id,
       issue: { index: drawn.index, texte: drawn.outcome.texte },
       variables: Object.fromEntries(variables),
+      draw,
     };
   } catch (error) {
     if (error instanceof ScriptError) {

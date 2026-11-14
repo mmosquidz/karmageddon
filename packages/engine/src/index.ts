@@ -22,6 +22,11 @@ export {
   type ResolutionErrorCode,
 } from "./draw.js";
 export {
+  EDUCATION_QI_STEP,
+  EDUCATION_START,
+  EDUCATION_WEALTH_STEP,
+  EDUCATION_YEAR_BASE,
+  EDUCATION_YEAR_MIN,
   GAUGE_MAX,
   GAUGE_MIN,
   GAUGE_START,
@@ -49,7 +54,9 @@ export {
 export {
   initialState,
   lifeStateSchema,
+  nextYear,
   playedCardSchema,
+  schoolYearGain,
   STATE_FIELDS,
   STATE_SCOPE,
   STATE_TARGETS,
