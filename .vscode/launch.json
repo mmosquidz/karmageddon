@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Karmageddon: filtre",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev -w @karmageddon/bff",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STOCHIA_API_URL": "http://127.0.0.1:5917"
+      }
+    },
+    {
+      "name": "Karmageddon: jeu",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev -w @karmageddon/game",
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Local:\\s+(https?://\\S+)",
+        "uriFormat": "%s"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Karmageddon (local)",
+      "configurations": ["Karmageddon: filtre", "Karmageddon: jeu"],
+      "preLaunchTask": "karmageddon: prepare",
+      "stopAll": true
+    }
+  ]
+}

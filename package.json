@@ -1,0 +1,20 @@
+{
+  "name": "karmageddon",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Karmageddon, a life simulation game in front of the Stochia engine.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n bff,game -c blue,magenta \"npm run dev -w @karmageddon/bff\" \"npm run dev -w @karmageddon/game\"",
+    "check": "npm run build -w @karmageddon/contract && npm run check -w @karmageddon/bff && npm run check -w @karmageddon/game",
+    "test": "npm run build -w @karmageddon/contract && npm run test -w @karmageddon/bff && npm run test -w @karmageddon/game",
+    "build": "npm run build -w @karmageddon/contract && npm run build -w @karmageddon/bff && npm run build -w @karmageddon/game",
+    "tauri": "npm run tauri -w @karmageddon/game"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

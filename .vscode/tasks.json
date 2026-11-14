@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "karmageddon: stop-game",
+      "type": "shell",
+      "command": "foreach ($port in 1420, 8787) { netstat -ano | Select-String \":$port\\s+.*LISTENING\" | ForEach-Object { $processId = ($_ -split '\\s+')[-1]; if ($processId -match '^\\d+$' -and [int]$processId -gt 0) { Stop-Process -Id ([int]$processId) -Force -ErrorAction SilentlyContinue } } }",
+      "options": {
+        "shell": {
+          "executable": "powershell.exe",
+          "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+        }
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "stochia: ensure",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}\\.vscode\\ensure-stochia.ps1\"",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "karmageddon",
+        "showReuseMessage": false,
+        "close": false
+      }
+    },
+    {
+      "label": "karmageddon: prepare",
+      "dependsOn": ["karmageddon: stop-game", "stochia: ensure"],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}
