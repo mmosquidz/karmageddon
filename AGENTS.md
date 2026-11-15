@@ -1,6 +1,14 @@
 # AGENTS.md — Karmageddon
 
-Life simulation game on top of **Stochia** (separate Rust repo, local copy `C:\stochia`). Flow: home → **Naître** → birth sheet → **Vivre cette vie** (one card a year, until the game's last age) or **Nouvelle vie**. Data path is always **game → BFF → Stochia**; clients never call Stochia. Ports, env vars and launch steps: see `README.md`.
+Life simulation game on top of **Stochia** (separate Rust repo, local copy `C:\stochia`). Flow: home → **Naître** → birth sheet → **Vivre cette vie** (one card a year, until the game's last age) or **Nouvelle vie**. Data path is always **game → BFF → Stochia**; clients never call Stochia.
+
+Three documents, each fact in one of them only (link, never copy):
+
+- `README.md`: ports, env vars, launch steps, commands, BFF routes, what the client receives, technical limits.
+- `docs/game-design.md`: the game design, written as the target game (death, karma across lives, income, dwelling, climate hazards, life state, card format, script language, card types, tuning targets). Not all of it runs: the "Construit" columns and the note under each section title say what is built and which phase builds the rest. The appendix describes the deck in the repo.
+- `docs/plan.md`: the action plan, in five phases, with the work per layer, the invariants each phase amends in this file, and what "done" means. A direction, not a request.
+
+Layout:
 
 - `apps/game`: SvelteKit + Vite + Tauri 2, French UI, renders only the BFF contract.
 - `apps/bff` ("le filtre"): calls Stochia, validates at runtime, builds the birth sheet, and plays lives in memory (`src/lives.ts`).
@@ -29,11 +37,11 @@ The game's premise is that you only know your life as it is at birth.
 - Keep browser and Tauri working; no Tauri or browser APIs during SvelteKit SSR. Never ship `localhost` as `VITE_BFF_URL`; `VITE_*` is public, so no secrets.
 - Windows + PowerShell: chain with `;`, not `&&`. Never kill `node`/Rust globally (local Stochia must stay up).
 - Public Stochia allows 60 req/min shared by all players: tests use fixtures and a fake upstream; set timeouts, honor `429`/`Retry-After`, no unbounded retries, no shared cache of a random birth.
-- UI: French, mobile and desktop, accessible, no double submit, stale responses never overwrite newer ones. Sarcasm is fine, but never about origin, disability or family; card text follows the same rule. No new mechanics (accounts, saves, inventory...) unless asked.
+- UI: French, mobile and desktop, accessible, no double submit, stale responses never overwrite newer ones. Sarcasm is fine, but never about origin, disability or family; card text follows the same rule (card checklist: `docs/game-design.md`, section 9.5). No new mechanics (accounts, saves, inventory...) unless asked: build a phase of `docs/plan.md` only when the owner asks for it, and amend the invariants above with that code, as listed under "Documents" in that phase.
 
 ## Verify and report
 
 - Code changes: `npm test`, `npm run check`, `npm run build`. Test that no future or unknown upstream field appears in the serialized response, and cover network errors, timeouts and 429s.
 - Card or engine changes: also `npm run cards:validate`, and `npm run cards:simulate` to look at a whole life (a tuning tool, never a game rule; it does not call Stochia). A change to the script language, the state names or the generator needs tests in `packages/engine`.
-- Update `README.md` when behavior or commands change.
+- Update `README.md` when commands, configuration, routes or the client contract change. Update `docs/game-design.md` when a state name, a parameter, a yearly rule, the card language, a card type or the deck changes. When a phase is built, mark what it made true as built there ("Construit" columns, section notes).
 - End with what works, which checks actually ran, and what remains. Never claim an unverified target or deployment.
