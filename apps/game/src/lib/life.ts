@@ -63,7 +63,7 @@ export function statusChanges(before: LifeStatus, after: LifeStatus, sex: Sex): 
   }
   const wealth = Math.round(after.wealth - before.wealth);
   if (wealth !== 0) {
-    changes.push(`Patrimoine ${formatSigned(wealth)}`);
+    changes.push(`Votre patrimoine ${formatSigned(wealth)}`);
   }
   if (before.inSchool !== after.inSchool) {
     changes.push(after.inSchool ? `Scolarisé${e}` : "Fin de la scolarité");

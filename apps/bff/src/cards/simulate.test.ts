@@ -24,7 +24,16 @@ const COUNTRIES: Pick<LifeState, "revenuPays" | "rangParents">[] = [
 
 const LIVES = 300;
 const BIRTHS: LifeState[] = COUNTRIES.flatMap((country) =>
-  [77, 100, 125].flatMap((qi) => (["femme", "homme"] as const).map((sexe) => ({ ...newborn, ...country, qi, sexe }))),
+  [77, 100, 125].flatMap((qi) =>
+    (["femme", "homme"] as const).map((sexe) => ({
+      ...newborn,
+      ...country,
+      qi,
+      sexe,
+      // Both habitats occur among poor births, so a card that branches on milieu is reached.
+      milieu: country.revenuPays === "faible" && sexe === "femme" ? "rural" : "urbain",
+    })),
+  ),
 );
 
 type Life = { seed: string; state: LifeState; years: SimulatedYear[] };

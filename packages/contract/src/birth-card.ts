@@ -6,6 +6,19 @@ export type Sex = z.infer<typeof sexSchema>;
 export const settlementSchema = z.enum(["urban_centre", "urban_cluster", "rural"]);
 export type Settlement = z.infer<typeof settlementSchema>;
 
+/** Kind of dwelling of the birth household. The same codes as Stochia. */
+export const dwellingSchema = z.enum([
+  "detached",
+  "semi_detached",
+  "terraced",
+  "apartment",
+  "compound",
+  "traditional",
+  "informal",
+  "mobile",
+]);
+export type Dwelling = z.infer<typeof dwellingSchema>;
+
 export const occupationLevelSchema = z.enum(["country_habitat", "country", "modelled"]);
 export type OccupationLevel = z.infer<typeof occupationLevelSchema>;
 
@@ -25,6 +38,27 @@ export const workSchema = z.object({
 });
 export type Work = z.infer<typeof workSchema>;
 
+const moneySumSchema = z.object({
+  amount: z.number().int(),
+  currency: z.string().regex(/^[A-Z]{3}$/),
+});
+
+/**
+ * A sum in the birth country's currency. `viewer` is the same sum in the
+ * browser's currency, when that currency differs. Both come from purchasing
+ * power, never an exchange rate. The dollar figure stays on the BFF.
+ */
+export const localMoneySchema = moneySumSchema.extend({
+  viewer: moneySumSchema.nullable(),
+});
+export type LocalMoney = z.infer<typeof localMoneySchema>;
+
+export const monthlyIncomeSchema = localMoneySchema.extend({
+  /** The draw was raised to the country's full-time statutory minimum. */
+  minimum: z.boolean(),
+});
+export type MonthlyIncome = z.infer<typeof monthlyIncomeSchema>;
+
 export const parentSchema = z.object({
   firstName: z.string().nullable(),
   ageAtBirth: z.number().int().nonnegative(),
@@ -33,6 +67,8 @@ export const parentSchema = z.object({
   diedBeforeBirth: z.boolean(),
   /** Wechsler IQ, already fixed on the day of birth. */
   iq: z.number().int(),
+  /** Earnings of the job held at the birth. Null when there is no wage, or no local currency. */
+  monthlyIncome: monthlyIncomeSchema.nullable(),
 });
 export type Parent = z.infer<typeof parentSchema>;
 
@@ -67,6 +103,11 @@ export const birthCardSchema = z.object({
   }),
   family: z.object({
     habitat: z.enum(["urban", "rural"]),
+    /**
+     * Dwelling of the household on the day of birth. It is not redrawn later.
+     * Null when the upstream life did not carry one.
+     */
+    dwelling: dwellingSchema.nullable(),
     mother: parentSchema,
     father: parentSchema,
   }),
@@ -75,6 +116,8 @@ export const birthCardSchema = z.object({
     lifeExpectancyAtBirth: z.number(),
     totalFertility: z.number(),
     parentsWealthPercentile: z.number().int().min(1).max(100).nullable(),
+    /** Net worth of the parents' household in the birth year. Later years never leave the BFF. */
+    householdWealthAtBirth: localMoneySchema.nullable(),
     /** `null` when Stochia has no figure for the country, or could not be asked. */
     countryIncome: countryIncomeSchema.nullable(),
   }),

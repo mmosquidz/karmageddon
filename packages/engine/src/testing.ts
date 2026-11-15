@@ -33,11 +33,12 @@ export const BIRTH: BirthCard = {
   },
   family: {
     habitat: "rural",
-    mother: { firstName: "Nurhayati", ageAtBirth: 32, birthCountryCode: "ID", work: null, diedBeforeBirth: false, iq: 107 },
-    father: { firstName: "Sutrisno", ageAtBirth: 34, birthCountryCode: "ID", work: null, diedBeforeBirth: false, iq: 107 },
+    dwelling: "traditional",
+    mother: { firstName: "Nurhayati", ageAtBirth: 32, birthCountryCode: "ID", work: null, diedBeforeBirth: false, iq: 107, monthlyIncome: null },
+    father: { firstName: "Sutrisno", ageAtBirth: 34, birthCountryCode: "ID", work: null, diedBeforeBirth: false, iq: 107, monthlyIncome: null },
   },
   elderSiblings: [],
-  context: { lifeExpectancyAtBirth: 69.4, totalFertility: 2.08, parentsWealthPercentile: 60, countryIncome: "middle" },
+  context: { lifeExpectancyAtBirth: 69.4, totalFertility: 2.08, parentsWealthPercentile: 60, householdWealthAtBirth: null, countryIncome: "middle" },
   record: { seed: "7804448558973285409", modelVersion: "test", dataSource: "test" },
 };
 

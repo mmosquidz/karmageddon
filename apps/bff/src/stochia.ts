@@ -1,4 +1,4 @@
-import { type ApiErrorCode } from "@karmageddon/contract";
+import { dwellingSchema, type ApiErrorCode } from "@karmageddon/contract";
 import { z } from "zod";
 import type { Config } from "./config.js";
 
@@ -14,10 +14,16 @@ const occupationSchema = z.object({
   unit_group: z.number().int().nullable(),
 });
 
+const earningsSchema = z.object({
+  monthly: z.number().finite().nonnegative(),
+  minimum: z.boolean(),
+});
+
 const workSchema = z.object({
   employment: z.enum(["employed", "not_employed"]),
   occupation: occupationSchema.nullable(),
   level: z.enum(["country_habitat", "country", "modelled"]),
+  earnings: earningsSchema.nullable(),
 });
 
 const parentSchema = z.object({
@@ -54,6 +60,8 @@ export const lifeResponseSchema = z.object({
   life_expectancy: z.number(),
   total_fertility: z.number(),
   first_name: nameSchema.nullable(),
+  /** Absent on a Stochia that has not shipped the dwelling draw yet. */
+  dwelling: dwellingSchema.optional(),
   iq: z.number().int(),
   parents: z.object({
     habitat: z.enum(["urban", "rural"]),
@@ -64,6 +72,13 @@ export const lifeResponseSchema = z.object({
   wealth: z
     .object({
       parents_percentile: z.number().int().min(1).max(100),
+      years: z.array(
+        z.object({
+          year: z.number().int(),
+          household: z.enum(["parents", "own"]),
+          net_worth: z.number().finite(),
+        }),
+      ),
     })
     .nullable(),
   model: z.object({

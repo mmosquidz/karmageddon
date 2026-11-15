@@ -1,0 +1,20 @@
+{
+  "slug": "sur-le-dos",
+  "type": "etape",
+  "titre": "Vous faites vos premiers pas",
+  "condition": "age >= 1 && age <= 2 && revenuPaysConnu && revenuPays == 'faible'",
+  "poids": "20",
+  "unique": true,
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Vous voyez du pays",
+      "issues": [
+        {
+          "texte": "Attaché sur le dos de votre mère, vous voyez du pays. Un jour vous posez les pieds : trois pas, une chute, des rires.",
+          "impact": "moral += 3; social += 1"
+        }
+      ]
+    }
+  ]
+}

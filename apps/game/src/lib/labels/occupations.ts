@@ -1,5 +1,6 @@
 import type { Work } from "@karmageddon/contract";
 import { JOB_TITLES } from "./job-titles.js";
+import { singularJobTitle } from "./singular-job.js";
 
 const MAJOR_GROUPS: Record<number, string> = {
   0: "professions militaires",
@@ -66,12 +67,14 @@ export function occupationLabel(work: Work): string {
   }
   const occupation = work.occupation;
   if (occupation.unitGroup != null && JOB_TITLES[occupation.unitGroup]) {
-    return JOB_TITLES[occupation.unitGroup];
+    return singularJobTitle(JOB_TITLES[occupation.unitGroup]);
   }
   if (work.level !== "modelled" && occupation.subMajor != null) {
-    return SUB_MAJOR_GROUPS[occupation.subMajor] ?? MAJOR_GROUPS[occupation.major] ?? `groupe ${occupation.major}`;
+    return singularJobTitle(
+      SUB_MAJOR_GROUPS[occupation.subMajor] ?? MAJOR_GROUPS[occupation.major] ?? `groupe ${occupation.major}`,
+    );
   }
-  return MAJOR_GROUPS[occupation.major] ?? `groupe ${occupation.major}`;
+  return singularJobTitle(MAJOR_GROUPS[occupation.major] ?? `groupe ${occupation.major}`);
 }
 
 export { MAJOR_GROUPS, SUB_MAJOR_GROUPS };

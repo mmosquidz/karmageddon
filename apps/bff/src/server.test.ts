@@ -83,6 +83,7 @@ describe("POST /api/births", () => {
     const raw = await (await app.request("/api/births", { method: "POST" })).text();
     expect(Object.keys(JSON.parse(raw).birth.context).sort()).toEqual([
       "countryIncome",
+      "householdWealthAtBirth",
       "lifeExpectancyAtBirth",
       "parentsWealthPercentile",
       "totalFertility",
@@ -90,6 +91,26 @@ describe("POST /api/births", () => {
     for (const hidden of ["14321", "gdp", "last_observed", "secret_"]) {
       expect(raw, hidden).not.toContain(hidden);
     }
+  });
+
+  test("adds the viewer's currency from the request, and ignores a body that is not one", async () => {
+    const app = createApp({ config, lives: noLives(), fetchImpl: fixtureUpstream });
+    const translated = birthResponseSchema.parse(
+      await (
+        await app.request("/api/births", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ viewerCountry: "FR" }),
+        })
+      ).json(),
+    );
+    expect(translated.birth.family.mother.monthlyIncome?.viewer).toEqual({ amount: 549, currency: "EUR" });
+    expect(JSON.stringify(translated)).not.toContain("20550");
+
+    const plain = birthResponseSchema.parse(
+      await (await app.request("/api/births", { method: "POST", body: "pas du json" })).json(),
+    );
+    expect(plain.birth.family.mother.monthlyIncome?.viewer).toBeNull();
   });
 
   test("keeps the birth when the economy cannot be read, with an unknown income", async () => {
@@ -660,11 +681,12 @@ describe("the lives kept in memory", () => {
     },
     family: {
       habitat: "rural",
-      mother: { firstName: null, ageAtBirth: 30, birthCountryCode: "FR", work: null, diedBeforeBirth: false, iq: 100 },
-      father: { firstName: null, ageAtBirth: 30, birthCountryCode: "FR", work: null, diedBeforeBirth: false, iq: 100 },
+      dwelling: "detached",
+      mother: { firstName: null, ageAtBirth: 30, birthCountryCode: "FR", work: null, diedBeforeBirth: false, iq: 100, monthlyIncome: null },
+      father: { firstName: null, ageAtBirth: 30, birthCountryCode: "FR", work: null, diedBeforeBirth: false, iq: 100, monthlyIncome: null },
     },
     elderSiblings: [],
-    context: { lifeExpectancyAtBirth: 80, totalFertility: 1.8, parentsWealthPercentile: null, countryIncome: "high" },
+    context: { lifeExpectancyAtBirth: 80, totalFertility: 1.8, parentsWealthPercentile: null, householdWealthAtBirth: null, countryIncome: "high" },
     record: { seed: "1", modelVersion: "v", dataSource: "WPP" },
   });
 

@@ -1,4 +1,4 @@
-import type { BirthCard, CountryIncome, Sex, Settlement } from "@karmageddon/contract";
+import type { BirthCard, CountryIncome, LocalMoney, Parent, Sex, Settlement } from "@karmageddon/contract";
 
 const countries = new Intl.DisplayNames("fr", { type: "region" });
 const unknownRegion = countries.of("ZZ");
@@ -30,6 +30,46 @@ export const SETTLEMENTS: Record<Settlement, string> = {
   urban_cluster: "Agglomération urbaine",
   rural: "Zone rurale",
 };
+
+const moneyFormat = new Map<string, Intl.NumberFormat>();
+
+function formatAmount(amount: number, currency: string): string {
+  let format = moneyFormat.get(currency);
+  if (!format) {
+    format = new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+      maximumFractionDigits: 0,
+    });
+    moneyFormat.set(currency, format);
+  }
+  return format.format(amount);
+}
+
+/** The birth country's currency, then the player's in parentheses when it differs. */
+export function formatMoney(money: LocalMoney): string {
+  const local = formatAmount(money.amount, money.currency);
+  if (money.viewer == null || money.viewer.currency === money.currency) {
+    return local;
+  }
+  return `${local} (${formatAmount(money.viewer.amount, money.viewer.currency)})`;
+}
+
+/** The parent's wage at the birth, or a short reason when there is none to show. */
+export function formatMonthlyIncome(parent: Parent): string | null {
+  if (parent.monthlyIncome) {
+    const floor = parent.monthlyIncome.minimum ? " (salaire minimum)" : "";
+    return `${formatMoney(parent.monthlyIncome)} par mois${floor}`;
+  }
+  if (parent.work?.employment === "employed") {
+    return "Salaire non publié en monnaie locale";
+  }
+  if (parent.work?.employment === "not_employed") {
+    return "Sans revenu d'emploi";
+  }
+  return null;
+}
 
 export const COUNTRY_INCOMES: Record<CountryIncome, string> = {
   low: "Revenu faible",
@@ -125,8 +165,20 @@ export function formatFertility(rate: number): string {
   return twoDecimals.format(rate);
 }
 
-export function formatCentile(rank: number): string {
-  return rank === 1 ? "1er centile" : `${rank}e centile`;
+/**
+ * Parental wealth, said for a player. Rank 1 is the most modest household in the country.
+ * A centile number is not shown: "40e centile" does not say whether that is comfortable.
+ */
+export function wealthStanding(rank: number): { label: string; detail: string } {
+  const label =
+    rank <= 20 ? "Foyer modeste" : rank <= 40 ? "Plutôt modeste" : rank <= 60 ? "Dans la moyenne" : rank <= 80 ? "Plutôt aisé" : "Foyer aisé";
+  const detail =
+    rank <= 1
+      ? "Parmi les plus modestes du pays."
+      : rank >= 100
+        ? "Parmi les plus aisés du pays."
+        : `${rank} % des foyers du pays ont moins.`;
+  return { label, detail };
 }
 
 export function completedYears(birth: string, later: string): number {

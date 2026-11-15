@@ -9,7 +9,7 @@
 >
   <GameCard class="w-full">
     <div class="flex flex-col items-center px-2 py-8 text-center">
-      <div class="seal seal-wait" aria-hidden="true">…</div>
+      <div class="seal seal-wait font-serif" aria-hidden="true">…</div>
       <h1 class="mt-6 font-serif text-3xl font-semibold">On vous cherche une place</h1>
       <p class="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
         Le registre feuillette le monde. Un premier réveil peut prendre quelques secondes. Le sort n’aime pas être
@@ -28,7 +28,6 @@
     border-radius: 999px;
     background: radial-gradient(circle at 35% 30%, oklch(0.62 0.14 30), oklch(0.4 0.14 28));
     color: oklch(0.97 0.01 85);
-    font-family: Fraunces, serif;
     font-size: 1.4rem;
     box-shadow: inset 0 0 0 2px oklch(0.75 0.08 70 / 0.4);
   }

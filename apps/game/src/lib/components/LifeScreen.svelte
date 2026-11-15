@@ -7,8 +7,9 @@
   import { Button } from "$lib/components/ui/button";
   import { lifeErrorMessage } from "$lib/copy/fr";
   import { formatAge, formatWealth, GAUGES, situation, statusChanges } from "$lib/life";
-  import { formatCentile, householdSentence } from "$lib/format";
+  import { countryName, householdSentence, wealthStanding } from "$lib/format";
   import DrawReveal from "./DrawReveal.svelte";
+  import Flag from "./Flag.svelte";
   import GameCard from "./GameCard.svelte";
   import HouseholdRail from "./HouseholdRail.svelte";
 
@@ -50,6 +51,7 @@
 
   const foyerLine = $derived(householdSentence(birth));
   const foyerRank = $derived(birth.context.parentsWealthPercentile);
+  const foyerStanding = $derived(foyerRank == null ? null : wealthStanding(foyerRank));
 
   /** Runs one request. Its answer is dropped if the screen went away meanwhile. */
   async function run(request: (signal: AbortSignal) => Promise<View>) {
@@ -158,7 +160,11 @@
       <div class="flex items-center justify-between gap-3">
         <div class="min-w-0">
           <p class="text-xs font-medium tracking-[0.22em] text-muted-foreground uppercase">Foyer d’origine</p>
-          <p class="mt-1 truncate text-sm">{foyerLine} {foyerRank == null ? "" : `· ${formatCentile(foyerRank)}`}</p>
+          <p class="mt-1 flex items-center gap-2 text-sm">
+            <Flag code={birth.place.countryCode} />
+            <span class="truncate">{countryName(birth.place.countryCode, birth.place.countryNameFallback)}</span>
+          </p>
+          <p class="mt-1 truncate text-sm text-muted-foreground">{foyerLine} {foyerStanding == null ? "" : `· ${foyerStanding.label}`}</p>
         </div>
         <a href="#foyer" class="shrink-0 text-sm font-medium text-primary underline underline-offset-4">
           Voir le foyer
@@ -172,7 +178,10 @@
       <div class="lg:sticky lg:top-6">
         <GameCard data-testid="life-status">
           <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h1 class="font-serif text-3xl font-semibold text-balance">{firstName ?? "Vous"}</h1>
+            <div>
+              <h1 class="font-serif text-3xl font-semibold text-balance">{firstName ?? "Vous"}</h1>
+              <p class="mt-1 text-sm font-medium tabular-nums">QI {birth.identity.iq}</p>
+            </div>
             <p class="font-serif text-2xl" aria-live="polite">{status ? formatAge(status.age) : "…"}</p>
           </div>
           {#if status}
@@ -202,9 +211,16 @@
                 </div>
               {/each}
             </dl>
-            <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
-              <span class="text-muted-foreground">Patrimoine</span>
-              <span class="mr-2 font-medium tabular-nums">{formatWealth(status.wealth)}</span>
+            <div class="mt-4">
+              <div class="flex items-baseline justify-between gap-3 text-sm">
+                <span class="text-muted-foreground">Votre patrimoine</span>
+                <span class="font-medium tabular-nums">{formatWealth(status.wealth)}</span>
+              </div>
+              <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Ce que cette vie accumule, en unité de jeu. Le patrimoine du foyer est celui des parents.
+              </p>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
               {#each situation(status, sex) as part (part)}
                 <Badge variant="outline">{part}</Badge>
               {/each}

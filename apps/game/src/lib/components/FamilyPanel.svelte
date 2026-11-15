@@ -6,14 +6,17 @@
     completedYears,
     formatAgeAtBirth,
     formatBornIn,
-    formatCentile,
+    wealthStanding,
     formatDate,
+    formatMoney,
+    formatMonthlyIncome,
     habitatLabel,
     householdSentence,
     sentence,
     siblingRole,
   } from "$lib/format";
   import { occupationLabel } from "$lib/labels/occupations";
+  import DwellingMark from "./DwellingMark.svelte";
   import GameCard from "./GameCard.svelte";
 
   let { card }: { card: BirthCard } = $props();
@@ -61,6 +64,8 @@
 
   const line = $derived(householdSentence(card));
   const wealth = $derived(card.context.parentsWealthPercentile);
+  const standing = $derived(wealth == null ? null : wealthStanding(wealth));
+  const householdWorth = $derived(card.context.householdWealthAtBirth);
 
   const parents = $derived([
     { role: "father" as const, label: "Père", parent: card.family.father },
@@ -144,15 +149,27 @@
     {/each}
   </ul>
 
+  {#if card.family.dwelling}
+    <div class="mt-4">
+      <DwellingMark dwelling={card.family.dwelling} />
+    </div>
+  {/if}
+
   <p class="mt-4 text-sm leading-relaxed" data-testid="household-sentence">{line}</p>
 
   <div class="mt-5" data-testid="household-wealth">
     <p class="text-xs font-medium tracking-[0.22em] text-[oklch(0.42_0.1_165)] uppercase">Patrimoine du foyer</p>
     <p class="mt-2 font-serif text-2xl font-semibold">
-      {wealth == null ? "Non renseigné" : formatCentile(wealth)}
+      {standing == null ? "Non renseigné" : standing.label}
     </p>
+    {#if standing}
+      <p class="mt-1 text-sm leading-relaxed">{standing.detail}</p>
+    {/if}
+    {#if householdWorth}
+      <p class="mt-1 font-medium tabular-nums" data-testid="household-worth">{formatMoney(householdWorth)}</p>
+    {/if}
     <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
-      Rang du patrimoine du foyer dans le pays, à la naissance.
+      Patrimoine du foyer parental à la naissance, dans le pays. Le vôtre se joue à part et part de zéro.
     </p>
   </div>
 
@@ -175,6 +192,9 @@
           {formatBornIn(person.role, person.parent.birthCountryCode, person.parent.birthCountryCode)}.
           {job(person.parent)}.
         </p>
+        {#if formatMonthlyIncome(person.parent)}
+          <p class="mt-1 text-sm tabular-nums" data-testid="parent-income">{formatMonthlyIncome(person.parent)}</p>
+        {/if}
         {#if person.parent.diedBeforeBirth}
           <p class="mt-1 text-sm text-muted-foreground">{deathLine(person.role === "mother" ? "female" : "male")}</p>
         {/if}

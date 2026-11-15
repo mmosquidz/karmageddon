@@ -13,6 +13,7 @@ const card = {
   },
   family: {
     habitat: "urban",
+    dwelling: "apartment",
     mother: {
       firstName: null,
       ageAtBirth: 30,
@@ -20,6 +21,7 @@ const card = {
       work: null,
       diedBeforeBirth: false,
       iq: 101,
+      monthlyIncome: null,
     },
     father: {
       firstName: "Luc",
@@ -28,10 +30,11 @@ const card = {
       work: { employment: "not_employed", level: "country", occupation: null },
       diedBeforeBirth: false,
       iq: 98,
+      monthlyIncome: null,
     },
   },
   elderSiblings: [],
-  context: { lifeExpectancyAtBirth: 85.1, totalFertility: 1.8, parentsWealthPercentile: null, countryIncome: "high" },
+  context: { lifeExpectancyAtBirth: 85.1, totalFertility: 1.8, parentsWealthPercentile: null, householdWealthAtBirth: null, countryIncome: "high" },
   record: { seed: "7", modelVersion: "v", dataSource: "WPP" },
 };
 

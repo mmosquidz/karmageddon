@@ -1,4 +1,5 @@
 import { birthResponseSchema, type BirthResponse } from "@karmageddon/contract";
+import { viewerCountry } from "../viewer-country.js";
 import { HttpError, postJson, type ClientOptions } from "./http.js";
 
 export type BirthErrorCode = "network" | "timeout" | "rate_limited" | "server" | "invalid_response";
@@ -16,10 +17,11 @@ export class BirthRequestError extends Error {
 export type BirthClientOptions = ClientOptions;
 
 export function requestBirth(signal?: AbortSignal): Promise<BirthResponse> {
-  return requestBirthWith({ signal });
+  const country = typeof navigator === "undefined" ? null : viewerCountry(navigator.languages);
+  return requestBirthWith({ signal, body: country == null ? {} : { viewerCountry: country } });
 }
 
-export async function requestBirthWith(options: BirthClientOptions = {}): Promise<BirthResponse> {
+export async function requestBirthWith(options: BirthClientOptions & { body?: unknown } = {}): Promise<BirthResponse> {
   try {
     return await postJson("/api/births", birthResponseSchema, { ...options, defaultTimeoutMs: 70_000 });
   } catch (error) {

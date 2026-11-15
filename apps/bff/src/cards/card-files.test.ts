@@ -71,6 +71,7 @@ describe("the cards of the repository", () => {
   test("a draw follows the age and the situation", () => {
     const toddler = slugs(at({ age: 1 }));
     expect(toddler).toContain("premiers-pas");
+    expect(toddler).not.toContain("sur-le-dos");
     expect(toddler).not.toContain("scolarisation");
 
     const child = slugs(at({ age: 9, marques: ["ecole"], scolarise: true }));
@@ -149,6 +150,36 @@ describe("the cards of the repository", () => {
     expect(slugs(at({ age: 25 }))).not.toContain(card.slug);
     expect(slugs(at({ age: 25 }), true)).toContain(card.slug);
     expect(slugs(at({ age: 17 }), true)).not.toContain(card.slug);
+  });
+
+  test("first steps leave the sofa behind, except in a poor country", () => {
+    const steps = (changes: Partial<LifeState>) =>
+      slugs(at({ age: 1, ...changes })).filter((slug) => slug === "premiers-pas" || slug === "sur-le-dos");
+    expect(steps({ revenuPays: "faible" })).toEqual(["sur-le-dos"]);
+    expect(steps({ revenuPays: "intermediaire" })).toEqual(["premiers-pas"]);
+    expect(steps({ revenuPays: "eleve" })).toEqual(["premiers-pas"]);
+    expect(steps({ revenuPays: null })).toEqual(["premiers-pas"]);
+    expect(steps({ revenuPays: "faible", age: 3 })).toEqual([]);
+
+    const carried = resolveCard(cardNamed("sur-le-dos"), "suite", at({ age: 1, revenuPays: "faible" }), seededRng("dos"));
+    expect(carried.issue.texte).toContain("sur le dos de votre mère");
+    expect(carried.state.moral).toBe(53);
+    expect(carried.state.social).toBe(51);
+
+    const pitch = (milieu: LifeState["milieu"]) =>
+      resolveCard(
+        cardNamed("foot-au-village"),
+        "suite",
+        at({ age: 5, revenuPays: "faible", milieu }),
+        seededRng(`foot/${milieu}`),
+      ).issue.texte;
+    expect(pitch("rural")).toContain("à côté du village");
+    expect(pitch("urbain")).toContain("entre les maisons");
+    expect(slugs(at({ age: 5, revenuPays: "faible" }))).toContain("foot-au-village");
+    expect(slugs(at({ age: 5, revenuPays: "intermediaire" }))).not.toContain("foot-au-village");
+    expect(slugs(at({ age: 5, revenuPays: null }))).not.toContain("foot-au-village");
+    expect(slugs(at({ age: 3, revenuPays: "faible" }))).not.toContain("foot-au-village");
+    expect(slugs(at({ age: 9, revenuPays: "faible" }))).not.toContain("foot-au-village");
   });
 
   test("school starts with a draw, except in a rich country where the player picks private or public", () => {

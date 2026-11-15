@@ -64,6 +64,7 @@ describe("toBirthCard", () => {
     expect(card.identity.birthDate).toBe("2026-11-14");
     expect(card.place.city).toBe("Kecamatan Pringgabaya");
     expect(card.place.countryCode).toBe("ID");
+    expect(card.family.dwelling).toBe("informal");
     expect(card.family.mother.firstName).toBe("Nurhayati");
     expect(card.family.father.firstName).toBe("Sutrisno");
     expect(card.family.mother.iq).toBe(107);
@@ -79,6 +80,9 @@ describe("toBirthCard", () => {
     ]);
     expect(card.elderSiblings.every((sibling) => sibling.diedBeforeBirth === false)).toBe(true);
     expect(card.context.parentsWealthPercentile).toBe(60);
+    expect(card.context.householdWealthAtBirth).toEqual({ amount: 98_816_417, currency: "IDR", viewer: null });
+    expect(card.family.mother.monthlyIncome).toEqual({ amount: 3_750_575, currency: "IDR", minimum: false, viewer: null });
+    expect(card.family.father.monthlyIncome).toEqual({ amount: 2_644_636, currency: "IDR", minimum: false, viewer: null });
     expect(card.record.seed).toBe(fixture.seed);
 
     const keys = keysOf(card);
@@ -93,6 +97,9 @@ describe("toBirthCard", () => {
     expect(encoded).not.toContain("inheritance");
     expect(encoded).not.toContain("20550");
     expect(encoded).not.toContain("19180");
+    expect(encoded).not.toContain("60381");
+    expect(encoded).not.toContain("300959");
+    expect(encoded).not.toContain("2075-12-06");
   });
 
   test("drops younger siblings and marks a death that already happened", () => {
@@ -138,6 +145,41 @@ describe("toBirthCard", () => {
     const card = toBirthCard(life, null);
     expect(card.family.father.diedBeforeBirth).toBe(false);
     expect(JSON.stringify(card)).not.toContain("death");
+  });
+
+  test("repeats each sum in the viewer's currency, and skips it when the currency is the same", () => {
+    const translated = toBirthCard(fixture, null, "FR");
+    expect(translated.context.householdWealthAtBirth?.viewer).toEqual({ amount: 14_467, currency: "EUR" });
+    expect(translated.family.mother.monthlyIncome?.viewer).toEqual({ amount: 549, currency: "EUR" });
+    expect(translated.family.father.monthlyIncome?.viewer).toEqual({ amount: 387, currency: "EUR" });
+    expect(JSON.stringify(translated)).not.toContain("20550");
+
+    const same = toBirthCard(fixture, null, "ID");
+    expect(same.context.householdWealthAtBirth?.viewer).toBeNull();
+    expect(same.family.mother.monthlyIncome?.currency).toBe("IDR");
+  });
+
+  test("keeps the rank when the country has no local currency, and drops the dollar figures", () => {
+    const life: LifeResponse = {
+      ...fixture,
+      birthplace: { ...fixture.birthplace, country_code: "LR" },
+    };
+    const card = toBirthCard(life, null);
+    const encoded = JSON.stringify(card);
+
+    expect(card.context.parentsWealthPercentile).toBe(60);
+    expect(card.context.householdWealthAtBirth).toBeNull();
+    expect(card.family.mother.monthlyIncome).toBeNull();
+    expect(card.family.father.monthlyIncome).toBeNull();
+    expect(encoded).not.toContain("20550");
+    expect(encoded).not.toContain("19180");
+  });
+
+  test("keeps a birth when the dwelling is missing, and does not invent one", () => {
+    const { dwelling: _dropped, ...without } = fixture;
+    const card = toBirthCard(without, null);
+    expect(card.family.dwelling).toBeNull();
+    expect(lifeResponseSchema.safeParse({ ...without, dwelling: "tent" }).success).toBe(false);
   });
 
   test("rejects a life that does not match the upstream contract", () => {

@@ -51,7 +51,7 @@ test("lists what a choice changed, and nothing else", () => {
     "Moral +3",
     "Karma +8",
     "Éducation -3",
-    "Patrimoine +1 500",
+    "Votre patrimoine +1 500",
     "Fin de la scolarité",
     "En emploi",
     "1 enfant de plus",

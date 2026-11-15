@@ -4,10 +4,12 @@ import {
   countryArticle,
   countryName,
   formatAgeAtBirth,
-  formatCentile,
+  wealthStanding,
   formatCoordinates,
   formatDate,
   formatFertility,
+  formatMoney,
+  formatMonthlyIncome,
   formatLifeExpectancy,
   formatPlace,
   householdSentence,
@@ -17,6 +19,30 @@ import {
 import type { BirthCard } from "@karmageddon/contract";
 
 describe("format", () => {
+  test("writes a parent's wage in local currency, and says when there is none", () => {
+    const money = formatMoney({ amount: 3750575, currency: "IDR", viewer: null }).replace(/\s/g, " ");
+    expect(money).toContain("3 750 575");
+    expect(money).not.toContain("$");
+    const both = formatMoney({
+      amount: 381466,
+      currency: "NGN",
+      viewer: { amount: 840, currency: "EUR" },
+    }).replace(/\s/g, " ");
+    expect(both).toContain("381 466");
+    expect(both).toContain("(840");
+    const paid = household().family.mother;
+    expect(
+      formatMonthlyIncome({
+        ...paid,
+        monthlyIncome: { amount: 1800, currency: "EUR", minimum: true, viewer: { amount: 2100, currency: "USD" } },
+      })?.replace(/\s/g, " "),
+    ).toContain("1 800");
+    expect(formatMonthlyIncome({ ...paid, work: { employment: "not_employed", level: "country", occupation: null } })).toBe(
+      "Sans revenu d'emploi",
+    );
+    expect(formatMonthlyIncome(paid)).toBeNull();
+  });
+
   test("formats a calendar date in French without shifting the day", () => {
     expect(formatDate("2026-11-14")).toBe("14 novembre 2026");
   });
@@ -40,8 +66,22 @@ describe("format", () => {
   test("formats numbers, ages and coordinates", () => {
     expect(formatLifeExpectancy(69.435)).toBe("69,4 ans");
     expect(formatFertility(2.07827)).toBe("2,08");
-    expect(formatCentile(1)).toBe("1er centile");
-    expect(formatCentile(60)).toBe("60e centile");
+    expect(wealthStanding(1)).toEqual({
+      label: "Foyer modeste",
+      detail: "Parmi les plus modestes du pays.",
+    });
+    expect(wealthStanding(40)).toEqual({
+      label: "Plutôt modeste",
+      detail: "40 % des foyers du pays ont moins.",
+    });
+    expect(wealthStanding(60)).toEqual({
+      label: "Dans la moyenne",
+      detail: "60 % des foyers du pays ont moins.",
+    });
+    expect(wealthStanding(100)).toEqual({
+      label: "Foyer aisé",
+      detail: "Parmi les plus aisés du pays.",
+    });
     expect(completedYears("2016-07-05", "2026-11-14")).toBe(10);
     expect(completedYears("2016-12-01", "2026-11-14")).toBe(9);
     expect(formatAgeAtBirth(0)).toBe("moins d'un an");
@@ -91,6 +131,7 @@ function household(options: {
     },
     family: {
       habitat: "urban",
+      dwelling: "apartment",
       mother: {
         firstName: "A",
         ageAtBirth: 30,
@@ -98,6 +139,7 @@ function household(options: {
         work: null,
         diedBeforeBirth: options.motherDead ?? false,
         iq: 100,
+        monthlyIncome: null,
       },
       father: {
         firstName: "B",
@@ -106,6 +148,7 @@ function household(options: {
         work: null,
         diedBeforeBirth: options.fatherDead ?? false,
         iq: 100,
+        monthlyIncome: null,
       },
     },
     elderSiblings: (options.siblings ?? []).map((sibling, index) => ({
@@ -119,6 +162,7 @@ function household(options: {
       lifeExpectancyAtBirth: 80,
       totalFertility: 1.8,
       parentsWealthPercentile: 60,
+      householdWealthAtBirth: null,
       countryIncome: "high",
     },
     record: { seed: "1", modelVersion: "v", dataSource: "WPP" },

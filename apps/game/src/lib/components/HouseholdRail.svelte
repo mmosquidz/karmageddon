@@ -1,8 +1,10 @@
 <script lang="ts">
   import type { BirthCard } from "@karmageddon/contract";
   import { Badge } from "$lib/components/ui/badge";
-  import { formatCentile, habitatLabel, householdSentence, sentence } from "$lib/format";
+  import { countryName, formatMoney, formatMonthlyIncome, habitatLabel, householdSentence, sentence, wealthStanding } from "$lib/format";
   import { occupationLabel } from "$lib/labels/occupations";
+  import DwellingMark from "./DwellingMark.svelte";
+  import Flag from "./Flag.svelte";
   import GameCard from "./GameCard.svelte";
 
   let { card }: { card: BirthCard } = $props();
@@ -66,6 +68,8 @@
 
   const line = $derived(householdSentence(card));
   const wealth = $derived(card.context.parentsWealthPercentile);
+  const standing = $derived(wealth == null ? null : wealthStanding(wealth));
+  const householdWorth = $derived(card.context.householdWealthAtBirth);
 
   function member(
     role: Role,
@@ -120,6 +124,10 @@
 
 <GameCard data-testid="household-rail">
   <p class="text-xs font-medium tracking-[0.22em] text-[oklch(0.42_0.1_165)] uppercase">Foyer d’origine</p>
+  <p class="mt-3 flex items-center gap-2 text-sm" data-testid="birth-country">
+    <Flag code={card.place.countryCode} />
+    <span>{countryName(card.place.countryCode, card.place.countryNameFallback)}</span>
+  </p>
 
   <ul class="household" aria-label="Composition du foyer" data-testid="household">
     {#each members as person (person.key)}
@@ -138,6 +146,12 @@
     {/each}
   </ul>
 
+  {#if card.family.dwelling}
+    <div class="mt-4">
+      <DwellingMark dwelling={card.family.dwelling} />
+    </div>
+  {/if}
+
   <p class="mt-3 text-sm leading-relaxed" data-testid="household-sentence">{line}</p>
 
   <div class="mt-4" data-testid="household-wealth">
@@ -145,13 +159,19 @@
       Patrimoine du foyer
     </p>
     <p class="mt-2 font-serif text-2xl font-semibold">
-      {wealth == null ? "Non renseigné" : formatCentile(wealth)}
+      {standing == null ? "Non renseigné" : standing.label}
     </p>
-    {#if wealth != null}
+    {#if standing}
+      <p class="mt-1 text-sm leading-relaxed">{standing.detail}</p>
+    {/if}
+    {#if householdWorth}
+      <p class="mt-1 text-sm font-medium tabular-nums" data-testid="household-worth">{formatMoney(householdWorth)}</p>
+    {/if}
+    {#if wealth != null && standing}
       <div
         class="mt-2 h-2 overflow-hidden rounded-full bg-muted"
         role="meter"
-        aria-label="Rang du patrimoine du foyer dans le pays"
+        aria-label="{standing.label}. {standing.detail}"
         aria-valuemin={1}
         aria-valuemax={100}
         aria-valuenow={wealth}
@@ -160,7 +180,7 @@
       </div>
     {/if}
     <p class="mt-2 text-xs leading-relaxed text-muted-foreground">
-      Rang du patrimoine du foyer dans le pays, à la naissance. Le montant ne sort pas du filtre.
+      Foyer parental à la naissance. Votre patrimoine, à gauche, est une unité de jeu.
     </p>
     <div class="mt-2">
       <Badge variant="outline">{habitatLabel(card.family.habitat)}</Badge>
@@ -172,17 +192,23 @@
     <ul class="mt-2 space-y-2 text-sm leading-relaxed">
       <li>
         <span class="font-medium">Père · {card.family.father.firstName ?? "Prénom non renseigné"}</span>
-        <span class="block text-muted-foreground">
+        <div class="text-muted-foreground">
           {card.family.father.ageAtBirth} ans à la naissance · {jobOf(card.family.father.work)}
           {card.family.father.diedBeforeBirth ? " · décédé avant la naissance" : ""}
-        </span>
+          {#if formatMonthlyIncome(card.family.father)}
+            <span class="block tabular-nums" data-testid="parent-income">{formatMonthlyIncome(card.family.father)}</span>
+          {/if}
+        </div>
       </li>
       <li>
         <span class="font-medium">Mère · {card.family.mother.firstName ?? "Prénom non renseigné"}</span>
-        <span class="block text-muted-foreground">
+        <div class="text-muted-foreground">
           {card.family.mother.ageAtBirth} ans à la naissance · {jobOf(card.family.mother.work)}
           {card.family.mother.diedBeforeBirth ? " · décédée avant la naissance" : ""}
-        </span>
+          {#if formatMonthlyIncome(card.family.mother)}
+            <span class="block tabular-nums" data-testid="parent-income">{formatMonthlyIncome(card.family.mother)}</span>
+          {/if}
+        </div>
       </li>
     </ul>
   </details>

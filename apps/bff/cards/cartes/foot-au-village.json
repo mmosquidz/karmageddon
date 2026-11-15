@@ -1,0 +1,26 @@
+{
+  "slug": "foot-au-village",
+  "type": "chance",
+  "titre": "Un ballon traîne sur un terrain en terre",
+  "condition": "age >= 4 && age <= 8 && revenuPaysConnu && revenuPays == 'faible'",
+  "poids": "8",
+  "unique": true,
+  "options": [
+    {
+      "id": "suite",
+      "libelle": "Vous jouez",
+      "issues": [
+        {
+          "condition": "milieu == 'rural'",
+          "texte": "Vous jouez au foot sur un terrain à côté du village. Deux pierres servent de buts.",
+          "impact": "sante += 2; social += 3; moral += 2"
+        },
+        {
+          "condition": "milieu == 'urbain'",
+          "texte": "Vous jouez au foot sur un terrain en terre, entre les maisons. Deux pierres servent de buts.",
+          "impact": "sante += 2; social += 3; moral += 2"
+        }
+      ]
+    }
+  ]
+}

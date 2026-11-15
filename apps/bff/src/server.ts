@@ -47,7 +47,7 @@ export function createApp(options: {
         life.birthplace.country_code,
         Number(life.birth_date.slice(0, 4)),
       );
-      const birth = toBirthCard(life, income);
+      const birth = toBirthCard(life, income, await viewerCountryOf(c));
       return c.json({ lifeId: lives.start(birth), birth });
     } catch (error) {
       const failure = error instanceof UpstreamFailure ? error : new UpstreamFailure("upstream_error");
@@ -98,6 +98,30 @@ export function createApp(options: {
   });
 
   return app;
+}
+
+/** The player's country, from the browser language. A missing or odd body still yields a birth. */
+async function viewerCountryOf(c: Context): Promise<string | null> {
+  let text: string;
+  try {
+    text = await c.req.text();
+  } catch {
+    return null;
+  }
+  if (text.trim() === "") {
+    return null;
+  }
+  let body: unknown;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (body === null || typeof body !== "object" || !("viewerCountry" in body)) {
+    return null;
+  }
+  const code = body.viewerCountry;
+  return typeof code === "string" && /^[A-Z]{2}$/.test(code) ? code : null;
 }
 
 function errorResponse(c: Context, failure: { code: ApiErrorCode; retryAfterSeconds?: number }): Response {
